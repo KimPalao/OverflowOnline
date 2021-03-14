@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppGateway } from './app.gateway';
 import { AppService } from './app.service';
+import { RedisClientModule } from './redis-client/redis-client.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { AppService } from './app.service';
       username: process.env.MONGO_INITDB_ROOT_USERNAME,
       password: process.env.MONGO_INITDB_ROOT_PASSWORD,
     }),
+    RedisClientModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppGateway],
