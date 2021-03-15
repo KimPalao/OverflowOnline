@@ -7,7 +7,6 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "socket.io-client": "^4.0.0",
     "vue": "^3.0.5",
     "vue-socket.io": "https://github.com/MetinSeylan/Vue-Socket.io.git#master"
   },
