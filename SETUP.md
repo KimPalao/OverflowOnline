@@ -16,6 +16,26 @@
 
 ### Steps
 
-1. Create a copy of the `local.env` file named `.env`
+1. Create a copy of the `local.env` file named `.env` in the `.devcontainer` folder
+
+    `cp local.env .devcontainer/.env`
+
 2. Start the frontend by running `npm run dev` in the `overflow-frontend` folder
+
+    `cd overflow-frontend && npm run dev`
+
 3. Start the backend by running `npm run start:dev` in the `overflow-backend` folder
+
+    `cd overflow-backend && npm run start:dev`
+
+### Resetting
+
+1. Remove the database container
+
+    `docker container rm overflowonline_devcontainer_db_1`
+
+2. Remove the mongodb-data volume
+   
+    `docker volume rm overflowonline_devcontainer_mongodb-data`
+
+3. Rebuild the container
