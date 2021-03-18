@@ -33,6 +33,8 @@ services:
     volumes:
       - mongodb-data:/data/db
       - ../overflow-backend/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    env_file:
+      - ./.env
     environment:
       MONGO_INITDB_ROOT_USERNAME: $MONGO_INITDB_ROOT_USERNAME
       MONGO_INITDB_ROOT_PASSWORD: $MONGO_INITDB_ROOT_PASSWORD
