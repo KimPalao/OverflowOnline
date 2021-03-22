@@ -4,7 +4,7 @@ import { createClient } from 'redis';
 @Injectable()
 export class RedisClientService {
   // TODO: Use an environment variable
-  private client = createClient({ host: 'redis' });
+  private client = createClient({ host: process.env.REDIS_HOST });
 
   async get(key: string) {
     return await new Promise((resolve, reject) => {
