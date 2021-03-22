@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "vue": "^3.0.5",
+    "vue-router": "4",
     "vue-socket.io": "https://github.com/MetinSeylan/Vue-Socket.io.git#master"
   },
   "devDependencies": {
