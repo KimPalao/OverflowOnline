@@ -10,7 +10,7 @@ import { RedisClientModule } from './redis-client/redis-client.module';
     TypeOrmModule.forRoot({
       name: 'default',
       type: 'mongodb',
-      host: 'db',
+      host: process.env.MONGO_INITDB_HOST,
       port: 27017,
       useNewUrlParser: true,
       useUnifiedTopology: true,
