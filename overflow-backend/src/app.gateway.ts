@@ -16,6 +16,7 @@ export class AppGateway {
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
+    client.emit('debug', { message: 'Hello world', arg1: 'Hi', arg2: 'there' });
     return '';
   }
 }

@@ -11,6 +11,11 @@ export default defineComponent({
     connect: function () {
       console.log("socket connected");
     },
+    debug({ message, ...rest }: { message: any; rest: Array<any> }) {
+      console.log(`Server sent the message:`, message);
+      console.log(`Server also sent the following`);
+      console.log(rest);
+    },
   },
 });
 </script>
