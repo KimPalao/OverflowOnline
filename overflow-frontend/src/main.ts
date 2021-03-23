@@ -2,12 +2,15 @@ import { createApp } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import VueSocketIO from 'vue-socket.io';
 import App from './App.vue';
+import store from './store';
 import Home from './Home.vue';
 import LobbyMenu from './LobbyMenu.vue';
 import Lobby from './Lobby.vue';
 import CreateLobby from './CreateLobby.vue';
 
 const app = createApp(App);
+
+app.config.globalProperties.store = store;
 
 const routes = [
   { path: '/', name: 'home', component: Home },
