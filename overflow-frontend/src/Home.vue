@@ -14,9 +14,11 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "Home",
+  emits: ["setName"],
   methods:  {
       handleSubmit(){
         console.log(this.username);
+        this.$emit('setName', this.username)
       }
   }
 });
