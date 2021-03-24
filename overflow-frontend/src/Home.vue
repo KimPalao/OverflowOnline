@@ -4,6 +4,7 @@
       <div class = "form-group">
           <label></label>
           <input type = "text" class = "form-control" v-model="username" placeholder="Enter name">
+          <button v-on="click" class=" btn">{{"Enter Name"}}</button>
       </div>
   </form>
 </template>
