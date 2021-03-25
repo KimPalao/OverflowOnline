@@ -4,7 +4,8 @@
       <div class = "form-group">
           <label></label>
           <input type = "text" class = "form-control" v-model="username" placeholder="Enter name">
-          <button v-on="click" class=" btn">{{"Enter Name"}}</button>
+          <button class=" btn">{{"Enter Name"}}</button>
+
       </div>
   </form>
 </template>
@@ -13,12 +14,19 @@
 import { defineComponent } from "vue";
 
 export default defineComponent({
+  data(){
+    return {username: ""}
+  },
   name: "Home",
   emits: ["setName"],
   methods:  {
       handleSubmit(){
-        console.log(this.username);
-        this.$emit('setName', this.username)
+        if (this.username.length == 0){
+          alert("username cannot be blank")
+          return
+        }
+        
+        this.$socket.emit('setName', this.username)
       }
   }
 });
