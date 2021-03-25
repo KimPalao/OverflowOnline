@@ -9,8 +9,10 @@ import Lobby from './Lobby.vue';
 import CreateLobby from './CreateLobby.vue';
 import JoinLobby from './JoinLobby.vue';
 
+// Create a Vue instance using the App as the root component
 const app = createApp(App);
 
+// Allow the store to be accessible globally
 app.config.globalProperties.store = store;
 
 const routes = [
@@ -30,7 +32,6 @@ app.use(router);
 
 app.use(new VueSocketIO({
   debug: true,
-  // @ts-ignore
   connection: `http://localhost:${import.meta.env.VITE_BACKEND_PORT}`
 }));
 

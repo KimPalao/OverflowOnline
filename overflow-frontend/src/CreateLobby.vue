@@ -17,6 +17,10 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 
+/**
+ * This is the page where the User creates a Lobby.
+ * Accessed when the user selects "Create Lobby" from the LobbyMenu
+ */
 export default defineComponent({
   data() {
     return { lobbyCode: "" };

@@ -7,6 +7,9 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 
+/**
+ * This is the LobbyMenu page. This is accessed after Home.
+ */
 export default defineComponent({
   name: "LobbyMenu",
   methods: {
