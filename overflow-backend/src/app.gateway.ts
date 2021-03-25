@@ -7,6 +7,9 @@ import {
 import { Server, Socket } from 'socket.io';
 import { RedisClientService } from './redis-client/redis-client.service';
 
+/**
+ * Controls the WebSocket functionality of the backend
+ */
 @WebSocketGateway()
 export class AppGateway {
   @WebSocketServer()
@@ -16,29 +19,56 @@ export class AppGateway {
 
   constructor(private readonly redis: RedisClientService) {}
 
+  /**
+   * An event handler that is run whenever a client disconnects
+   *
+   * @param client The Socket.IO socket object
+   * @returns An empty message
+   */
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
     this.redis.disconnectPlayer(client.id);
     return '';
   }
 
+  /**
+   * An event handler that is run whenever a client connects
+   *
+   * @param client The Socket.IO socket object
+   * @returns An empty message
+   */
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
     client.emit('debug', { message: 'Hello world', arg1: 'Hi', arg2: 'there' });
     return '';
   }
 
+  /**
+   * Saves the displayName of the user in the Redis store
+   *
+   * It emits to:
+   *
+   * setNameResponse
+   * - result
+   * - - True if the operation was successful, false otherwise
+   * - message
+   * - - The displayName if the operation was successful, otherwise it contains the error message.
+   *
+   * @param client The Socket.IO socket object
+   * @param displayName The display name of the user to be set
+   * @returns void
+   */
   @SubscribeMessage('setName')
-  async setName(client: Socket, data: string) {
-    if (data.trim().length === 0) {
+  async setName(client: Socket, displayName: string) {
+    if (displayName.trim().length === 0) {
       client.emit('setNameResponse', {
         result: false,
         message: 'Username cannot be blank',
       });
       return;
     }
-    await this.redis.setName(client.id, data);
-    client.emit('setNameResponse', { result: true, message: data });
+    await this.redis.setName(client.id, displayName);
+    client.emit('setNameResponse', { result: true, message: displayName });
   }
 
   @SubscribeMessage('createLobby')

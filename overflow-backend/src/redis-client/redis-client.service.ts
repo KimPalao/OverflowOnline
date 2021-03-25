@@ -1,11 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { createClient } from 'redis';
 
+/**
+ * A wrapper for the redis client
+ */
 @Injectable()
 export class RedisClientService {
-  // TODO: Use an environment variable
   private client = createClient({ host: process.env.REDIS_HOST });
 
+  /**
+   * Gets the value stored in `key` from the Redis store
+   *
+   * @param key - The key of the value to retrieve
+   * @returns The value associated with the `key`
+   */
   async get(key: string): Promise<string> {
     return await new Promise<string>((resolve, reject) => {
       this.client.get(key, (err, value) => {
@@ -15,6 +23,12 @@ export class RedisClientService {
     });
   }
 
+  /**
+   * Stores `value` in the Redis store with the key `key`
+   *
+   * @param key - The key to set the value of
+   * @param value The value to set at `key`
+   */
   async set(key: string, value: any): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       this.client.set(key, value, (err) => {
