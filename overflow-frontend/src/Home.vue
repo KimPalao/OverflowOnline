@@ -34,7 +34,7 @@ export default defineComponent({
   },
   methods: {
     handleSubmit() {
-      if (this.username.length == 0) {
+      if (this.username.trim().length == 0) {
         alert("Username cannot be blank");
         return;
       }

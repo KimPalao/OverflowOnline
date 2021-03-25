@@ -30,7 +30,7 @@ export class AppGateway {
   @SubscribeMessage('setName')
   async setName(client: Socket, data: string) {
     if (data.trim().length === 0) {
-      client.emit('setNameResponse', { result: true, message: data });
+      client.emit('setNameResponse', { result: false, message: data });
       return;
     }
     await this.redis.set(`${client.id}-display-name`, data);
