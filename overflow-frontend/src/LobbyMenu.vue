@@ -1,5 +1,7 @@
 <template>
   <h1>LobbyMenu</h1>
+  <button @click="JoinLobby()" class="btn">{{ "Join Lobby" }}</button>
+  <button @click="CreateLobby()" class ="btn">{{ "Create Lobby" }}</button>
 </template>
 
 <script lang="ts">
@@ -7,6 +9,14 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "LobbyMenu",
+  methods: {
+    CreateLobby() {
+      this.$router.push({ name: "CreateLobby" });
+    },
+    JoinLobby() {
+      this.$router.push({ name: "JoinLobby" });
+    },
+  },
   mounted() {
     console.log("LobbyMenu");
   },

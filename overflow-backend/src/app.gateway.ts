@@ -18,6 +18,7 @@ export class AppGateway {
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
+    this.redis.disconnectPlayer(client.id);
     return '';
   }
 
@@ -36,7 +37,67 @@ export class AppGateway {
       });
       return;
     }
-    await this.redis.set(`${client.id}-display-name`, data);
+    await this.redis.setName(client.id, data);
     client.emit('setNameResponse', { result: true, message: data });
+  }
+
+  @SubscribeMessage('createLobby')
+  async createLobby(client: Socket, lobbyCode: string) {
+    if (lobbyCode.trim().length === 0) {
+      return client.emit('createLobbyResponse', {
+        result: false,
+        message: 'Lobby Code cannot be empty',
+      });
+    }
+
+    if (await this.redis.gameExists(lobbyCode)) {
+      return client.emit('createLobbyResponse', {
+        result: false,
+        message: 'Lobby Code in use',
+      });
+    }
+
+    try {
+      await this.redis.createNewGame(lobbyCode, client.id);
+      return client.emit('createLobbyResponse', {
+        result: true,
+        message: lobbyCode,
+      });
+    } catch (error) {
+      return client.emit('createLobbyResponse', {
+        result: false,
+        message: `There was an error: ${JSON.stringify(error)}`,
+      });
+    }
+  }
+
+  @SubscribeMessage('joinLobby')
+  async joinLobby(client: Socket, lobbyCode: string) {
+    if (lobbyCode.trim().length === 0) {
+      return client.emit('joinLobbyResponse', {
+        result: false,
+        message: 'Lobby Code cannot be empty',
+      });
+    }
+
+    if (!(await this.redis.gameExists(lobbyCode))) {
+      return client.emit('joinLobbyResponse', {
+        result: false,
+        message: 'Lobby does not exist',
+      });
+    }
+
+    try {
+      await this.redis.joinGame(lobbyCode, client.id);
+      return client.emit('joinLobbyResponse', {
+        result: true,
+        message: lobbyCode,
+      });
+    } catch (error) {
+      return client.emit('joinLobbyResponse', {
+        result: false,
+        message: `There was an error: ${JSON.stringify(error)}`,
+      });
+    }
   }
 }
