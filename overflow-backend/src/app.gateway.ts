@@ -1,6 +1,11 @@
 import { Logger } from '@nestjs/common';
-import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody } from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  SubscribeMessage,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { RedisClientService } from './redis-client/redis-client.service';
 
 @WebSocketGateway()
 export class AppGateway {
@@ -8,6 +13,8 @@ export class AppGateway {
   server: Server;
 
   private logger: Logger = new Logger('AppGateway');
+
+  constructor(private readonly redis: RedisClientService) {}
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
@@ -21,7 +28,12 @@ export class AppGateway {
   }
 
   @SubscribeMessage('setName')
-  handleEvent(@MessageBody() data: any) {
-    console.log(data)
+  async setName(client: Socket, data: string) {
+    if (data.trim().length === 0) {
+      client.emit('setNameResponse', { result: true, message: data });
+      return;
+    }
+    await this.redis.set(`${client.id}-display-name`, data);
+    client.emit('setNameResponse', { result: true, message: data });
   }
 }
