@@ -17,12 +17,28 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 
+/**
+ * This is the home page. Here, the user will be able to set their username.
+ */
 export default defineComponent({
   data() {
-    return { username: "" };
+    return {
+      /**
+       * This is the username the user will set
+       * @type string
+       */
+      username: "",
+    };
   },
   name: "Home",
   sockets: {
+    /**
+     * Handles Socket.IO server's response to the setName event emitted
+     *
+     * @param {Object} payload - The response from the server
+     * @param {boolean} payload.result - True if the name was set correctly, false otherwise.
+     * @param {string} payload.message - Set to the username if result=true, otherwise it is set to the error message.
+     */
     setNameResponse({ result, message }: { result: boolean; message: any }) {
       if (result) {
         this.store.state.displayName = message;
@@ -33,6 +49,9 @@ export default defineComponent({
     },
   },
   methods: {
+    /**
+     * Event handler for the form
+     */
     handleSubmit() {
       if (this.username.trim().length == 0) {
         alert("Username cannot be blank");

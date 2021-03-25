@@ -1,11 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { createClient } from 'redis';
 
+/**
+ * A wrapper for the redis client
+ */
 @Injectable()
 export class RedisClientService {
-  // TODO: Use an environment variable
   private client = createClient({ host: process.env.REDIS_HOST });
 
+  /**
+   * Gets the value stored in `key` from the Redis store
+   *
+   * @param key - The key of the value to retrieve
+   * @returns The value associated with the `key`
+   */
   async get(key: string): Promise<string> {
     return await new Promise<string>((resolve, reject) => {
       this.client.get(key, (err, value) => {
@@ -15,6 +23,12 @@ export class RedisClientService {
     });
   }
 
+  /**
+   * Stores `value` in the Redis store with the key `key`
+   *
+   * @param key - The key to set the value of
+   * @param value The value to set at `key`
+   */
   async set(key: string, value: any): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       this.client.set(key, value, (err) => {
@@ -24,15 +38,29 @@ export class RedisClientService {
     });
   }
 
-  async hset(key: string, value: any): Promise<void> {
+  /**
+   * Sets key.field = value
+   *
+   * @param key - The key of the object to store in
+   * @param field - The property of the object to set
+   * @param value - The value to store
+   */
+  async hset(key: string, field: string, value: any): Promise<void> {
     await new Promise<void>((resolve, reject) => {
-      this.client.hset(key, value, (err) => {
+      this.client.hset(key, field, value, (err) => {
         if (err) reject(err);
         resolve();
       });
     });
   }
 
+  /**
+   * Pushes `value` to the end of the list at `key`
+   *
+   * @param key - The key of the list to push to
+   * @param value - The value to push to the list
+   * @returns Length of the list after pushing
+   */
   async rpush(key: string, value: any): Promise<number> {
     return await new Promise((resolve, reject) => {
       this.client.rpush(key, value, (err, val) => {
@@ -42,6 +70,12 @@ export class RedisClientService {
     });
   }
 
+  /**
+   * Checks if `key` exists in the Redis store
+   *
+   * @param key - The key to check
+   * @returns A boolean indicating the existence of `key`
+   */
   async exists(key: string): Promise<boolean> {
     return await new Promise((resolve, reject) => {
       this.client.exists(key, (err, value) => {
@@ -53,16 +87,39 @@ export class RedisClientService {
 
   // Lobby / Game functions
 
-  async setName(playerId: string, name: string) {
+  /**
+   * Sets the name of the player
+   *
+   * @param playerId The Socket.IO id of the player
+   * @param name Name of the player
+   * @returns Promise<void>
+   */
+  async setName(playerId: string, name: string): Promise<void> {
     return await this.client.set(`${playerId}-display-name`, name);
   }
 
+  /**
+   * Checks if a game exists by its code
+   *
+   * @param lobbyCode Code of the lobby / game
+   * @returns Boolean indicating if the lobby / game exists
+   */
   async gameExists(lobbyCode: string): Promise<boolean> {
     return await this.exists(`game-${lobbyCode}`);
   }
 
+  /**
+   * Creates a new game
+   *
+   * @param lobbyCode Code of the lobby / game
+   * @param hostId Socket.IO id of the host
+   * @returns Promise<void>
+   */
   async createNewGame(lobbyCode: string, hostId: string) {
+    // Start a transaction
     const multi = this.client.multi();
+
+    // Set `game-${lobbyCode}` = {host: hostId, code: lobbyCode, active: '0'}
     multi.hmset(
       `game-${lobbyCode}`,
       'host',
@@ -72,21 +129,34 @@ export class RedisClientService {
       'active',
       '0',
     );
+    // Set `game-${lobbyCode}-players` = [hostId]
     multi.rpush(`game-${lobbyCode}-players`, hostId);
+    // Set `host-${hostId}` = lobbyCode
     multi.set(`host-${hostId}`, lobbyCode);
     return await new Promise((resolve, reject) => {
       multi.exec((err, val) => {
         if (err) reject(err);
-        console.log(val);
         resolve(val);
       });
     });
   }
 
+  /**
+   * Returns the lobby code that the host is a part of
+   *
+   * @param hostId Socket.IO id of the host
+   * @returns Promise<string>`
+   */
   async getGameOfHost(hostId: string): Promise<string> {
     return await this.get(`host-${hostId}`);
   }
 
+  /**
+   * Cleans up resources used by the user
+   *
+   * @param playerId Socket.IO id of the player
+   * @returns Promise<void>
+   */
   async disconnectPlayer(playerId: string) {
     const lobbyCode = this.getGameOfHost(playerId);
     const multi = this.client.multi();
@@ -101,6 +171,12 @@ export class RedisClientService {
     });
   }
 
+  /**
+   * Adds a player to a game lobby
+   *
+   * @param lobbyCode Code of the lobby / game to join
+   * @param playerId Socket.IO id of the player
+   */
   async joinGame(lobbyCode: string, playerId: string) {
     await this.rpush(`game-${lobbyCode}-players`, playerId);
   }

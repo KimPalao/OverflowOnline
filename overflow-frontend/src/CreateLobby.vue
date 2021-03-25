@@ -17,12 +17,31 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 
+/**
+ * This is the page where the User creates a Lobby.
+ * Accessed when the user selects "Create Lobby" from the LobbyMenu
+ */
 export default defineComponent({
   data() {
-    return { lobbyCode: "" };
+    return {
+      /**
+       * This is the code of the lobby
+       * that the user will try to create
+       *
+       * @type string
+       */
+      lobbyCode: "",
+    };
   },
   name: "CreateLobby",
   sockets: {
+    /**
+     * Handles Socket.IO server's response to the createLobby event emitted
+     *
+     * @param {Object} payload - The response from the server
+     * @param {boolean} payload.result - True if the lobby code is valid, false otherwise.
+     * @param {string} payload.message - Set to the lobby code if result=true, otherwise it is set to the error message.
+     */
     createLobbyResponse({
       result,
       message,

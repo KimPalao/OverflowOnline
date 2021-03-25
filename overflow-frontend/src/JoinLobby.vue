@@ -19,10 +19,25 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   data() {
-    return { lobbyCode: "" };
+    return {
+      /**
+       * This is the code of the lobby
+       * that the user will try to join
+       *
+       * @type string
+       */
+      lobbyCode: "",
+    };
   },
   name: "JoinLobby",
   sockets: {
+    /**
+     * Handles Socket.IO server's response to the joinLobby event emitted
+     *
+     * @param {Object} payload - The response from the server
+     * @param {boolean} payload.result - True if the lobby code is valid, false otherwise.
+     * @param {string} payload.message - Set to the lobby code if result=true, otherwise it is set to the error message.
+     */
     joinLobbyResponse({
       result,
       message,

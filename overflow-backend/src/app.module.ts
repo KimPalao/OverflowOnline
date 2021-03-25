@@ -5,6 +5,9 @@ import { AppGateway } from './app.gateway';
 import { AppService } from './app.service';
 import { RedisClientModule } from './redis-client/redis-client.module';
 
+/**
+ * The default app module
+ */
 @Module({
   imports: [
     TypeOrmModule.forRoot({
