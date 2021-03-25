@@ -23,7 +23,13 @@ export default defineComponent({
   },
   name: "CreateLobby",
   sockets: {
-    createLobbyResponse({result, message}: {result: boolean, message: string}) {  
+    createLobbyResponse({
+      result,
+      message,
+    }: {
+      result: boolean;
+      message: string;
+    }) {
       if (result) {
         this.store.state.lobbyCode = message;
         this.$router.push({ name: "Lobby" });
@@ -34,7 +40,7 @@ export default defineComponent({
   },
   methods: {
     handleSubmit() {
-      if (this.username.trim().length == 0) {
+      if (this.lobbyCode.trim().length == 0) {
         alert("Code cannot be blank");
         return;
       }
