@@ -7,6 +7,7 @@ import Home from './Home.vue';
 import LobbyMenu from './LobbyMenu.vue';
 import Lobby from './Lobby.vue';
 import CreateLobby from './CreateLobby.vue';
+import JoinLobby from './JoinLobby.vue';
 
 const app = createApp(App);
 
@@ -16,7 +17,8 @@ const routes = [
   { path: '/', name: 'home', component: Home },
   { path: '/lobby-menu', name: 'LobbyMenu', component: LobbyMenu },
   { path: '/lobby', name: 'Lobby', component: Lobby },
-  { path: '/create-lobby', name: 'CreateLobby', component: CreateLobby }
+  { path: '/create-lobby', name: 'CreateLobby', component: CreateLobby },
+  { path: '/join-lobby', name: 'JoinLobby', component: JoinLobby }
 ]
 
 const router = createRouter({
