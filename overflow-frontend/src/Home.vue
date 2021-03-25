@@ -33,7 +33,7 @@ export default defineComponent({
   name: "Home",
   sockets: {
     /**
-     * Prints debug messages from the server
+     * Handles Socket.IO server's response to the setName event emitted
      *
      * @param {Object} payload - The response from the server
      * @param {boolean} payload.result - True if the name was set correctly, false otherwise.
