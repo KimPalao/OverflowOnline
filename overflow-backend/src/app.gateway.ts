@@ -25,7 +25,7 @@ export class AppGateway {
    * @param client The Socket.IO socket object
    * @returns An empty message
    */
-  handleDisconnect(client: Socket) {
+  handleDisconnect(client: Socket): string {
     this.logger.log(`Client disconnected: ${client.id}`);
     this.redis.disconnectPlayer(client.id);
     return '';
@@ -37,7 +37,7 @@ export class AppGateway {
    * @param client The Socket.IO socket object
    * @returns An empty message
    */
-  handleConnection(client: Socket) {
+  handleConnection(client: Socket): string {
     this.logger.log(`Client connected: ${client.id}`);
     client.emit('debug', { message: 'Hello world', arg1: 'Hi', arg2: 'there' });
     return '';
@@ -59,7 +59,8 @@ export class AppGateway {
    * @returns void
    */
   @SubscribeMessage('setName')
-  async setName(client: Socket, displayName: string) {
+  async setName(client: Socket, displayName: string): Promise<void> {
+    // Check if the display name is empty
     if (displayName.trim().length === 0) {
       client.emit('setNameResponse', {
         result: false,
@@ -87,6 +88,7 @@ export class AppGateway {
    */
   @SubscribeMessage('createLobby')
   async createLobby(client: Socket, lobbyCode: string): Promise<void> {
+    // Check if the lobby code is empty
     if (lobbyCode.trim().length === 0) {
       client.emit('createLobbyResponse', {
         result: false,
@@ -95,6 +97,7 @@ export class AppGateway {
       return;
     }
 
+    // Check if the lobby code is in use
     if (await this.redis.gameExists(lobbyCode)) {
       client.emit('createLobbyResponse', {
         result: false,
@@ -105,6 +108,8 @@ export class AppGateway {
 
     try {
       await this.redis.createNewGame(lobbyCode, client.id);
+      // Add player to a room identified by the lobby code
+      // so that they recieve all events emitted to that room
       client.join(`game-${lobbyCode}`);
       client.emit('createLobbyResponse', {
         result: true,
@@ -139,34 +144,41 @@ export class AppGateway {
    * @param lobbyCode The code of the lobby / game to create
    */
   @SubscribeMessage('joinLobby')
-  async joinLobby(client: Socket, lobbyCode: string) {
+  async joinLobby(client: Socket, lobbyCode: string): Promise<void> {
+    // Check if the lobby code is empty
     if (lobbyCode.trim().length === 0) {
-      return client.emit('joinLobbyResponse', {
+      client.emit('joinLobbyResponse', {
         result: false,
         message: 'Lobby Code cannot be empty',
       });
+      return;
     }
 
+    // Check if the lobby / game exists
     if (!(await this.redis.gameExists(lobbyCode))) {
-      return client.emit('joinLobbyResponse', {
+      client.emit('joinLobbyResponse', {
         result: false,
         message: 'Lobby does not exist',
       });
+      return;
     }
 
     try {
       await this.redis.joinGame(lobbyCode, client.id);
+      // Add player to a room identified by the lobby code
+      // so that they recieve all events emitted to that room
       client.join(`game-${lobbyCode}`);
+      // Inform the players of the lobby that a new player has joined
       client.to(`game-${lobbyCode}`).emit('playerJoin', {
         displayName: await this.redis.getPlayerName(client.id),
         playerId: client.id,
       });
-      return client.emit('joinLobbyResponse', {
+      client.emit('joinLobbyResponse', {
         result: true,
         message: lobbyCode,
       });
     } catch (error) {
-      return client.emit('joinLobbyResponse', {
+      client.emit('joinLobbyResponse', {
         result: false,
         message: `There was an error: ${JSON.stringify(error)}`,
       });
@@ -186,9 +198,8 @@ export class AppGateway {
    * @param lobbyCode The code of the lobby to get the list of players from
    */
   @SubscribeMessage('getPlayers')
-  async getPlayers(client: Socket, lobbyCode: string) {
+  async getPlayers(client: Socket, lobbyCode: string): Promise<void> {
     const players = await this.redis.getGamePlayers(lobbyCode);
-    this.logger.log(players);
     client.emit('getPlayersResponse', {
       players,
     });
@@ -212,8 +223,9 @@ export class AppGateway {
       lobbyCode: string;
       playerId: string;
     },
-  ) {
+  ): Promise<void> {
     await this.redis.kickPlayer(lobbyCode, playerId);
+    // Alert all players in the lobby that a player has been kicked
     this.server.in(`game-${lobbyCode}`).emit('kickEvent', { playerId });
   }
 
@@ -234,7 +246,7 @@ export class AppGateway {
    * @param lobbyCode The lobby code of the game to start
    */
   @SubscribeMessage('startGame')
-  async startGame(client: Socket, lobbyCode: string) {
+  async startGame(client: Socket, lobbyCode: string): Promise<void> {
     try {
       if ((await this.redis.getNumberOfPlayers(lobbyCode)) < 2) {
         client.emit('startGameResponse', {
@@ -243,6 +255,7 @@ export class AppGateway {
         });
       }
       await this.redis.setGameActive(lobbyCode);
+      // Inform the players of the lobby that the game has started
       this.server.in(`game-${lobbyCode}`).emit('gameStartEvent');
     } catch (error) {
       client.emit('startGameResponse', { result: false, message: error });
