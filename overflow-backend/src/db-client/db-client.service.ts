@@ -31,7 +31,7 @@ export class DbClientService {
    */
   async manager(): Promise<EntityManager | null> {
     try {
-      await this.connection.connect();
+      if (!this.connection.isConnected) await this.connection.connect();
       return this.connection.manager;
     } catch (error) {
       console.error(error);
