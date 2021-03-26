@@ -112,7 +112,7 @@ export class RedisClientService {
    * @param key The key of the list to retrieve
    * @returns The full list
    */
-  async getList(key: string) {
+  async getList(key: string): Promise<Array<string>> {
     return this.lrange(key, 0, -1);
   }
 
@@ -179,7 +179,7 @@ export class RedisClientService {
    * @param hostId Socket.IO id of the host
    * @returns Promise<void>
    */
-  async createNewGame(lobbyCode: string, hostId: string) {
+  async createNewGame(lobbyCode: string, hostId: string): Promise<void> {
     // Start a transaction
     const multi = this.client.multi();
 
@@ -229,13 +229,18 @@ export class RedisClientService {
    * Cleans up resources used by the user
    *
    * @param playerId Socket.IO id of the player
-   * @returns Promise<void>
    */
-  async disconnectPlayer(playerId: string) {
+  async disconnectPlayer(playerId: string): Promise<void> {
+    // Get the lobby code that the player is a host of
+    // so it can be freed from memory if it exists
     const lobbyCode = this.getGameOfHost(playerId);
+    // Start a transaction
     const multi = this.client.multi();
+    // Remove the game information
     multi.del(`game-${lobbyCode}`);
+    // Remove the game player list
     multi.del(`game-${lobbyCode}-players`);
+    // Remove the host-lobby mapping
     multi.del(`host-${playerId}`);
     return await new Promise((resolve, reject) => {
       multi.exec((err, val) => {
@@ -251,7 +256,7 @@ export class RedisClientService {
    * @param lobbyCode Code of the lobby / game to join
    * @param playerId Socket.IO id of the player
    */
-  async joinGame(lobbyCode: string, playerId: string) {
+  async joinGame(lobbyCode: string, playerId: string): Promise<void> {
     await this.rpush(`game-${lobbyCode}-players`, playerId);
   }
 
@@ -261,10 +266,11 @@ export class RedisClientService {
    * @param lobbyCode - The code of the lobby / game to retrieve players from
    * @returns - The list of players
    */
-  async getGamePlayers(lobbyCode: string) {
+  async getGamePlayers(lobbyCode: string): Promise<Array<any>> {
     const players = await this.getList(`game-${lobbyCode}-players`);
     const playerObjects = [];
     for (const player of players) {
+      // Get the display name of each user
       playerObjects.push({
         playerId: player,
         displayName: await this.getPlayerName(player),
@@ -279,7 +285,7 @@ export class RedisClientService {
    * @param lobbyCode The code of the lobby / game to remove players from
    * @param playerId The Socket.IO id of the player
    */
-  async kickPlayer(lobbyCode: string, playerId: string) {
+  async kickPlayer(lobbyCode: string, playerId: string): Promise<void> {
     await this.lrem(`game-${lobbyCode}-players`, 0, playerId);
   }
 
@@ -298,7 +304,7 @@ export class RedisClientService {
    *
    * @param lobbyCode The code of the game to set as active
    */
-  async setGameActive(lobbyCode: string) {
+  async setGameActive(lobbyCode: string): Promise<void> {
     await this.hset(`game-${lobbyCode}`, 'active', '1');
   }
 }
