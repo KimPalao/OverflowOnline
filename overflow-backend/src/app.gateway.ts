@@ -160,4 +160,20 @@ export class AppGateway {
     await this.redis.kickPlayer(lobbyCode, playerId);
     this.server.in(`game-${lobbyCode}`).emit('kickEvent', { playerId });
   }
+
+  @SubscribeMessage('startGame')
+  async startGame(client: Socket, lobbyCode: string) {
+    try {
+      if ((await this.redis.getNumberOfPlayers(lobbyCode)) < 2) {
+        client.emit('startGameResponse', {
+          result: false,
+          message: 'Cannot start game with only one player',
+        });
+      }
+      await this.redis.setGameActive(lobbyCode);
+      this.server.in(`game-${lobbyCode}`).emit('gameStartEvent');
+    } catch (error) {
+      client.emit('startGameResponse', { result: false, message: error });
+    }
+  }
 }

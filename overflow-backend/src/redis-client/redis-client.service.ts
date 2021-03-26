@@ -83,6 +83,15 @@ export class RedisClientService {
     });
   }
 
+  async llen(key: string): Promise<number> {
+    return await new Promise<number>((resolve, reject) => {
+      this.client.llen(key, (err, value) => {
+        if (err) reject(err);
+        resolve(parseInt(value));
+      });
+    });
+  }
+
   async getList(key: string) {
     return this.lrange(key, 0, -1);
   }
@@ -232,5 +241,13 @@ export class RedisClientService {
 
   async kickPlayer(lobbyCode: string, playerId: string) {
     await this.lrem(`game-${lobbyCode}-players`, 0, playerId);
+  }
+
+  async getNumberOfPlayers(lobbyCode: string): Promise<number> {
+    return await this.llen(`game-${lobbyCode}`);
+  }
+
+  async setGameActive(lobbyCode: string) {
+    await this.hset(`game-${lobbyCode}`, 'active', '1');
   }
 }

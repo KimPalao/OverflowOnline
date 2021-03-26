@@ -11,6 +11,7 @@
     >
       <h3>{{ index + 1 }}. {{ player.displayName }}</h3>
       <span
+        v-if="isHost"
         class="kick-button"
         style="cursor: pointer"
         @click="kickPlayer(player.playerId)"
@@ -22,7 +23,7 @@
   <br />
 
   <!-- UC1-S9: Host starts game successfully -->
-  <button @click="onClick()">{{ "Start Game" }}</button>
+  <button @click="onClick()" v-if="isHost">{{ "Start Game" }}</button>
   <!-- /UC1-S9 -->
 </template>
 
@@ -58,6 +59,11 @@ export default defineComponent({
     gameStartEvent() {
       // Navigates to game page
     },
+    startGameResponse({ result, message }: { result: boolean; message: any }) {
+      if (!result) {
+        alert(message);
+      }
+    },
     kickEvent({ playerId }: { playerId: string }) {
       if (playerId === this.$socket.id) {
         // When the user is kicked
@@ -78,9 +84,6 @@ export default defineComponent({
       console.log(this.$socket.id, this.players[0].playerId);
       return this.$socket.id === this.players[0].playerId;
     },
-    socketId() {
-      return this.$socket.id;
-    },
   },
   methods: {
     handleSubmit() {
@@ -91,6 +94,9 @@ export default defineComponent({
       this.$socket.emit("kickPlayer", this.kickedPlayer);
     },
     onClick() {
+      if (this.players.length < 2) {
+        return alert("Cannot start game with only player");
+      }
       this.$socket.emit("startGame");
     },
     kickPlayer(playerId) {
