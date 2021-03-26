@@ -36,11 +36,22 @@ import { defineComponent } from "vue";
 export default defineComponent({
   data() {
     return {
+      /**
+       * The list of players assigned to the current lobby
+       * @type Array
+       */
       players: [],
     };
   },
   name: "Lobby",
   sockets: {
+    /**
+     * Listens to the event where a player joins the current lobby
+     *
+     * @param {Object} payload The response from the server
+     * @param {string} payload.displayName The display name of the new player
+     * @param {string} payload.playerId The Socket.IO id of the new player
+     */
     playerJoin({
       displayName,
       playerId,
@@ -53,17 +64,38 @@ export default defineComponent({
         playerId,
       });
     },
+    /**
+     * Handles Socket.IO server's resposne to the getPlayers event emitted
+     *
+     * @param {Object} payload The response from the server
+     * @param {string} payload.players The list of players
+     */
     getPlayersResponse({ players }: { players: Array<any> }) {
       this.players = players;
     },
+    /**
+     * Listens to the event where the host successfully starts the game
+     */
     gameStartEvent() {
-      // Navigates to game page
+      console.log("Game has been started");
+      // TODO: Uncomment once the Game page has been created
+      // this.$router.push({ name: "Game" });
     },
+    /**
+     * Handles Socket.IO server's resposne to the startGame event emitted
+     *
+     * @param {Object} payload The response from the server
+     * @param {boolean} payload.result - False if the game was not started successfully.
+     * @param {string} payload.message - The error message from failing to start the game
+     */
     startGameResponse({ result, message }: { result: boolean; message: any }) {
       if (!result) {
         alert(message);
       }
     },
+    /**
+     * Listens to the event where a player is kicked from the lobby
+     */
     kickEvent({ playerId }: { playerId: string }) {
       if (playerId === this.$socket.id) {
         // When the user is kicked
@@ -80,25 +112,24 @@ export default defineComponent({
   },
   computed: {
     isHost() {
+      // Checks if the list of players has been populated
       if (this.players.length < 1) return false;
-      console.log(this.$socket.id, this.players[0].playerId);
       return this.$socket.id === this.players[0].playerId;
     },
   },
   methods: {
-    handleSubmit() {
-      if (this.kickedPlayer.trim().length == 0) {
-        alert("Please enter a Username");
-        return;
-      }
-      this.$socket.emit("kickPlayer", this.kickedPlayer);
-    },
+    /**
+     * Event handler for the "Start Game" button
+     */
     onClick() {
       if (this.players.length < 2) {
         return alert("Cannot start game with only player");
       }
       this.$socket.emit("startGame");
     },
+    /**
+     * Sends a message to the Socket.IO server to kick a player
+     */
     kickPlayer(playerId) {
       this.$socket.emit("kickPlayer", {
         lobbyCode: this.store.state.lobbyCode,
@@ -108,6 +139,7 @@ export default defineComponent({
   },
   mounted() {
     console.log("Lobby");
+    // On mount, get the list of players currently in the lobby
     this.$socket.emit("getPlayers", this.store.state.lobbyCode);
   },
 });

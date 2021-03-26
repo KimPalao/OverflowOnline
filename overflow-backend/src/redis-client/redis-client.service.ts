@@ -70,6 +70,14 @@ export class RedisClientService {
     });
   }
 
+  /**
+   * Returns elements of the list at `key` from index `start` to index `end`, exclusive
+   *
+   * @param key The key of the list to retrieve
+   * @param start The starting index
+   * @param end The ending index, exclusive
+   * @returns Elements of the array from [start:end]
+   */
   async lrange(
     key: string,
     start: number,
@@ -83,6 +91,12 @@ export class RedisClientService {
     });
   }
 
+  /**
+   * Returns the length of the list at `key`
+   *
+   * @param key The key of the list to check the length of
+   * @returns The length of the list
+   */
   async llen(key: string): Promise<number> {
     return await new Promise<number>((resolve, reject) => {
       this.client.llen(key, (err, value) => {
@@ -92,6 +106,12 @@ export class RedisClientService {
     });
   }
 
+  /**
+   * A shortcut function for returning all the elements of a list at `key`
+   *
+   * @param key The key of the list to retrieve
+   * @returns The full list
+   */
   async getList(key: string) {
     return this.lrange(key, 0, -1);
   }
@@ -111,12 +131,20 @@ export class RedisClientService {
     });
   }
 
+  /**
+   * Removes `count` occurrences of `value` from list at `key`
+   *
+   * @param key - The key of the list to remove an element from
+   * @param count - The number of instances to remove, 0 for all
+   * @param value - The value to remove
+   * @returns A boolean indicating that a value was removed
+   */
   async lrem(key: string, count: number, value: string): Promise<boolean> {
     console.log(key, value);
     return await new Promise((resolve, reject) => {
       this.client.lrem(key, count, value, (err, value) => {
         if (err) reject(err);
-        resolve(value === 1);
+        resolve(value > 0);
       });
     });
   }
@@ -227,6 +255,12 @@ export class RedisClientService {
     await this.rpush(`game-${lobbyCode}-players`, playerId);
   }
 
+  /**
+   * Returns the list of players in a game
+   *
+   * @param lobbyCode - The code of the lobby / game to retrieve players from
+   * @returns - The list of players
+   */
   async getGamePlayers(lobbyCode: string) {
     const players = await this.getList(`game-${lobbyCode}-players`);
     const playerObjects = [];
@@ -239,14 +273,31 @@ export class RedisClientService {
     return playerObjects;
   }
 
+  /**
+   * Removes a player from a game's list of players
+   *
+   * @param lobbyCode The code of the lobby / game to remove players from
+   * @param playerId The Socket.IO id of the player
+   */
   async kickPlayer(lobbyCode: string, playerId: string) {
     await this.lrem(`game-${lobbyCode}-players`, 0, playerId);
   }
 
+  /**
+   * Counts the number of players assigned to a game
+   *
+   * @param lobbyCode The code of the lobby / game to count players of
+   * @returns Number of players in a lobby / game
+   */
   async getNumberOfPlayers(lobbyCode: string): Promise<number> {
     return await this.llen(`game-${lobbyCode}`);
   }
 
+  /**
+   * Sets a game as "active"
+   *
+   * @param lobbyCode The code of the game to set as active
+   */
   async setGameActive(lobbyCode: string) {
     await this.hset(`game-${lobbyCode}`, 'active', '1');
   }
