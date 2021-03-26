@@ -123,7 +123,7 @@ export default defineComponent({
      */
     onClick() {
       if (this.players.length < 2) {
-        return alert("Cannot start game with only player");
+        return alert("Cannot start game with only one player");
       }
       this.$socket.emit("startGame");
     },
