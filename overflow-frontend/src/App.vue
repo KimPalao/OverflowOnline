@@ -4,6 +4,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import { useRoute } from "vue-router";
 
 /**
  * This is the root of the App
@@ -31,6 +32,16 @@ export default defineComponent({
       console.log(`Server also sent the following`);
       console.log(rest);
     },
+  },
+  mounted() {
+    const route = useRoute();
+    if (this.store.state.displayName.length === 0 && route.name !== "Home")
+      this.$router.push({ name: "home" });
+    else if (
+      this.store.state.lobbyCode.length === 0 &&
+      !["LobbyMenu", "CreateLobby", "JoinLobby"].includes(route.name.toString())
+    )
+      this.$router.push({ name: "LobbyMenu" });
   },
 });
 </script>

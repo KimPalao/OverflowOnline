@@ -89,6 +89,7 @@ export class AppGateway {
 
     try {
       await this.redis.createNewGame(lobbyCode, client.id);
+      client.join(`game-${lobbyCode}`);
       return client.emit('createLobbyResponse', {
         result: true,
         message: lobbyCode,
@@ -119,6 +120,11 @@ export class AppGateway {
 
     try {
       await this.redis.joinGame(lobbyCode, client.id);
+      client.join(`game-${lobbyCode}`);
+      client.to(`game-${lobbyCode}`).emit('playerJoin', {
+        displayName: await this.redis.getPlayerName(client.id),
+        playerId: client.id,
+      });
       return client.emit('joinLobbyResponse', {
         result: true,
         message: lobbyCode,
@@ -129,5 +135,29 @@ export class AppGateway {
         message: `There was an error: ${JSON.stringify(error)}`,
       });
     }
+  }
+
+  @SubscribeMessage('getPlayers')
+  async getPlayers(client: Socket, lobbyCode: string) {
+    const players = await this.redis.getGamePlayers(lobbyCode);
+    this.logger.log(players);
+    client.emit('getPlayersResponse', {
+      players,
+    });
+  }
+
+  @SubscribeMessage('kickPlayer')
+  async kickPlayer(
+    client: Socket,
+    {
+      lobbyCode,
+      playerId,
+    }: {
+      lobbyCode: string;
+      playerId: string;
+    },
+  ) {
+    await this.redis.kickPlayer(lobbyCode, playerId);
+    this.server.in(`game-${lobbyCode}`).emit('kickEvent', { playerId });
   }
 }

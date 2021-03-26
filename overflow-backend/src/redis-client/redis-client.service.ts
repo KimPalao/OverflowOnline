@@ -70,6 +70,23 @@ export class RedisClientService {
     });
   }
 
+  async lrange(
+    key: string,
+    start: number,
+    end: number,
+  ): Promise<Array<string>> {
+    return await new Promise((resolve, reject) => {
+      this.client.lrange(key, start, end, (err, val) => {
+        if (err) reject(err);
+        resolve(val);
+      });
+    });
+  }
+
+  async getList(key: string) {
+    return this.lrange(key, 0, -1);
+  }
+
   /**
    * Checks if `key` exists in the Redis store
    *
@@ -79,6 +96,16 @@ export class RedisClientService {
   async exists(key: string): Promise<boolean> {
     return await new Promise((resolve, reject) => {
       this.client.exists(key, (err, value) => {
+        if (err) reject(err);
+        resolve(value === 1);
+      });
+    });
+  }
+
+  async lrem(key: string, count: number, value: string): Promise<boolean> {
+    console.log(key, value);
+    return await new Promise((resolve, reject) => {
+      this.client.lrem(key, count, value, (err, value) => {
         if (err) reject(err);
         resolve(value === 1);
       });
@@ -152,6 +179,16 @@ export class RedisClientService {
   }
 
   /**
+   * Returns the name of a player given their Socket.IO id
+   *
+   * @param playerId Socket.IO id of the player
+   * @returns The name of the player
+   */
+  async getPlayerName(playerId: string): Promise<string> {
+    return await this.get(`${playerId}-display-name`);
+  }
+
+  /**
    * Cleans up resources used by the user
    *
    * @param playerId Socket.IO id of the player
@@ -179,5 +216,21 @@ export class RedisClientService {
    */
   async joinGame(lobbyCode: string, playerId: string) {
     await this.rpush(`game-${lobbyCode}-players`, playerId);
+  }
+
+  async getGamePlayers(lobbyCode: string) {
+    const players = await this.getList(`game-${lobbyCode}-players`);
+    const playerObjects = [];
+    for (const player of players) {
+      playerObjects.push({
+        playerId: player,
+        displayName: await this.getPlayerName(player),
+      });
+    }
+    return playerObjects;
+  }
+
+  async kickPlayer(lobbyCode: string, playerId: string) {
+    await this.lrem(`game-${lobbyCode}-players`, 0, playerId);
   }
 }
