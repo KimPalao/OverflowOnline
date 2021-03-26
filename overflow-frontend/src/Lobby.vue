@@ -11,7 +11,7 @@
     >
       <h3>{{ index + 1 }}. {{ player.displayName }}</h3>
       <span
-        v-if="isHost"
+        v-if="isHost && index !== 0"
         class="kick-button"
         style="cursor: pointer"
         @click="kickPlayer(player.playerId)"
