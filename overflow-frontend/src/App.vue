@@ -1,5 +1,7 @@
 <template>
-  <router-view />
+  <div v-if="error">{{ error }}</div>
+  <div v-else-if="loading">Loading</div>
+  <router-view v-else />
 </template>
 
 <script lang="ts">
@@ -11,6 +13,12 @@ import { useRoute } from "vue-router";
  */
 export default defineComponent({
   name: "App",
+  data() {
+    return {
+      loading: true,
+      error: "",
+    };
+  },
   sockets: {
     /**
      * Runs when the socket connects
@@ -33,7 +41,23 @@ export default defineComponent({
       console.log(rest);
     },
   },
+  methods: {
+    async checkBackend() {
+      try {
+        await this.axios.get(this.$socket.io.uri);
+        this.loading = false;
+      } catch (error) {
+        let errorMessage = "Backend cannot be reached. The game cannot start.";
+        if (error?.response?.data?.message)
+          errorMessage += this.error = ` Error: ${error.response.data.message}`;
+        alert(errorMessage);
+      }
+    },
+  },
   mounted() {
+    // Check for backend availability
+    this.checkBackend();
+
     const route = useRoute();
     // Do not allow user to go to pages directly
 

@@ -1,6 +1,8 @@
 import { createApp } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import VueSocketIO from 'vue-socket.io';
+import axios from 'axios';
+import VueAxios from 'vue-axios';
 import App from './App.vue';
 import store from './store';
 import Home from './Home.vue';
@@ -34,5 +36,7 @@ app.use(new VueSocketIO({
   debug: true,
   connection: `http://localhost:${import.meta.env.VITE_BACKEND_PORT}`
 }));
+
+app.use(VueAxios, axios);
 
 app.mount('#app');

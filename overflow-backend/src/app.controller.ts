@@ -1,6 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Res } from '@nestjs/common';
 import { AppService } from './app.service';
 import { DbClientService } from './db-client/db-client.service';
+import { Response } from 'express';
 
 /**
  * The default controller.
@@ -18,14 +19,15 @@ export class AppController {
    * @returns 'Welcome to Overflow: Online!'
    */
   @Get()
-  async getHello(): Promise<string> {
+  async getHello(@Res() res: Response): Promise<any> {
     // Check database connection
     const manager = await this.dbClientService.manager();
-    if (manager) {
-      console.log('Connected to database');
-    } else {
-      console.log('No database connection');
-    }
-    return this.appService.getWelcomeMessage();
+    if (manager)
+      return res.json({
+        message: this.appService.getWelcomeMessage(),
+      });
+    return res.status(503).json({
+      message: 'No database connection',
+    });
   }
 }
