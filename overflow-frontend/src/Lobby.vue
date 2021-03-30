@@ -78,6 +78,7 @@ export default defineComponent({
      */
     gameStartEvent() {
       console.log("Game has been started");
+      alert("Game to be implemented");
       // TODO: Uncomment once the Game page has been created
       // this.$router.push({ name: "Game" });
     },
@@ -125,7 +126,7 @@ export default defineComponent({
       if (this.players.length < 2) {
         return alert("Cannot start game with only one player");
       }
-      this.$socket.emit("startGame");
+      this.$socket.emit("startGame", this.store.state.lobbyCode);
     },
     /**
      * Sends a message to the Socket.IO server to kick a player

@@ -296,7 +296,7 @@ export class RedisClientService {
    * @returns Number of players in a lobby / game
    */
   async getNumberOfPlayers(lobbyCode: string): Promise<number> {
-    return await this.llen(`game-${lobbyCode}`);
+    return await this.llen(`game-${lobbyCode}-players`);
   }
 
   /**
