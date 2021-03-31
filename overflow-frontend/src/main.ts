@@ -5,11 +5,11 @@ import axios from 'axios';
 import VueAxios from 'vue-axios';
 import App from './App.vue';
 import store from './store';
-import Home from './Home.vue';
-import LobbyMenu from './LobbyMenu.vue';
-import Lobby from './Lobby.vue';
-import CreateLobby from './CreateLobby.vue';
-import JoinLobby from './JoinLobby.vue';
+import Home from './pages/Home.vue';
+import LobbyMenu from './pages/LobbyMenu.vue';
+import Lobby from './pages/Lobby.vue';
+import CreateLobby from './pages/CreateLobby.vue';
+import JoinLobby from './pages/JoinLobby.vue';
 
 // Create a Vue instance using the App as the root component
 const app = createApp(App);
