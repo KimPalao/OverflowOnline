@@ -57,20 +57,6 @@ export default defineComponent({
   mounted() {
     // Check for backend availability
     this.checkBackend();
-
-    const route = useRoute();
-    // Do not allow user to go to pages directly
-
-    if (this.store.state.displayName.length === 0 && route.name !== "Home") {
-      // Check if the user skipped setting a username
-      this.$router.push({ name: "home" });
-    } else if (
-      // Chcek if the user skipped picking a lobby
-      this.store.state.lobbyCode.length === 0 &&
-      !["LobbyMenu", "CreateLobby", "JoinLobby"].includes(route.name.toString())
-    ) {
-      this.$router.push({ name: "LobbyMenu" });
-    }
   },
 });
 </script>
