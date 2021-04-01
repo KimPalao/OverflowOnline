@@ -1,55 +1,44 @@
 <template>
   <div class="grid">
     <div id="top-cards">
-      <div class="card"></div>
-      <div class="card"></div>
-      <div class="card"></div>
-      <div class="card"></div>
-      <div class="card"></div>
+      <div class="card" v-for="card in player4.numberOfCards"></div>
       <div>
-        <p>Player 4</p>
-        <p>Points: 010</p>
+        <p>{{ player4.displayName }}</p>
+        <p v-if="player4.score">{{ scoreDisplay(player4.score) }}</p>
       </div>
     </div>
     <div id="left-cards">
-      <div class="card"></div>
-      <div class="card"></div>
-      <div class="card"></div>
-      <div class="card"></div>
-      <div class="card"></div>
+      <div class="card" v-for="card in player2.numberOfCards"></div>
       <div>
-        <p>Player 2</p>
-        <p>Points: 010</p>
+        <p>{{ player2.displayName }}</p>
+        <p v-if="player2.score">{{ scoreDisplay(player2.score) }}</p>
       </div>
     </div>
     <div id="right-cards">
-      <div class="card"></div>
-      <div class="card"></div>
-      <div class="card"></div>
-      <div class="card"></div>
-      <div class="card"></div>
+      <div class="card" v-for="card in player3.numberOfCards"></div>
       <div>
-        <p>Player 3</p>
-        <p>Points: 010</p>
+        <p>{{ player3.displayName }}</p>
+        <p v-if="player3.score">{{ scoreDisplay(player3.score) }}</p>
       </div>
     </div>
     <div id="bottom-cards">
-      <div class="card">01</div>
-      <div class="card">10</div>
-      <div class="card">01</div>
-      <div class="card">11</div>
-      <div class="card">11</div>
+      <div
+        class="card"
+        v-for="(card, index) in hand"
+        :key="index"
+        :style="cardStyle(card.image)"
+      ></div>
       <div>
         <p>You</p>
-        <p>Points: 010</p>
+        <p>{{ scoreDisplay(score) }}</p>
       </div>
     </div>
 
     <div id="game-state">
-      <div class="card">1</div>
-      <div class="card">0</div>
-      <div class="card">0</div>
-      <div class="card">1</div>
+      <div class="card">{{ boardNthNumber(3) }}</div>
+      <div class="card">{{ boardNthNumber(2) }}</div>
+      <div class="card">{{ boardNthNumber(1) }}</div>
+      <div class="card">{{ boardNthNumber(0) }}</div>
     </div>
 
     <div id="last-card">
@@ -64,7 +53,60 @@ import { defineComponent } from "@vue/runtime-core";
 
 export default defineComponent({
   name: "Game",
+  data() {
+    return {
+      players: [],
+      hand: [],
+      board: 0,
+      score: 6,
+    };
+  },
+  sockets: {
+    getGameDataResponse({
+      players,
+      hand,
+    }: {
+      players: Array<any>;
+      hand: Array<any>;
+    }) {
+      this.players = players;
+      this.hand = hand;
+    },
+  },
+  computed: {
+    player2() {
+      if (this.players.length > 0) return this.players[0];
+      return {};
+    },
+    player3() {
+      if (this.players.length > 1) return this.players[1];
+      return {};
+    },
+    player4() {
+      if (this.players.length > 2) return this.players[2];
+      return {};
+    },
+  },
+  methods: {
+    boardNthNumber(n: number) {
+      return (this.board >> n) & 1;
+    },
+    cardImageUrl(url: string) {
+      // @ts-ignore
+      return `http://localhost:${import.meta.env.VITE_BACKEND_PORT}/${url}`;
+    },
+    cardStyle(url: string) {
+      return {
+        backgroundImage: "url(" + this.cardImageUrl(url) + ")",
+        backgroundSize: "cover",
+      };
+    },
+    scoreDisplay(points: number) {
+      return points.toString(2).padStart(3, "0");
+    },
+  },
   mounted() {
+    this.$socket.emit("getGameData", this.store.state.lobbyCode);
     console.log("Game");
   },
 });
