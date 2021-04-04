@@ -17,7 +17,8 @@ export default defineComponent({
   name: "App",
   data() {
     return {
-      loading: true,
+      checkingBackend: true,
+      loadingAssets: true,
       error: "",
     };
   },
@@ -47,7 +48,32 @@ export default defineComponent({
     async checkBackend() {
       try {
         await this.axios.get(this.$socket.io.uri);
-        this.loading = false;
+        this.checkingBackend = false;
+      } catch (error) {
+        let errorMessage = "Backend cannot be reached. The game cannot start.";
+        if (error?.response?.data?.message)
+          errorMessage += this.error = ` Error: ${error.response.data.message}`;
+        alert(errorMessage);
+      }
+    },
+    async loadAssets() {
+      try {
+        const response = await this.axios.get(`${this.$socket.io.uri}/cards`);
+        const cards = response.data.data;
+        const promises = [];
+        for (const card of cards) {
+          promises.push(
+            new Promise<void>((resolve, reject) => {
+              const img = new Image();
+              img.onload = function () {
+                resolve();
+              };
+              img.src = `${this.$socket.io.uri}/${card.image}`;
+            })
+          );
+        }
+        await Promise.all(promises);
+        this.loadingAssets = false;
       } catch (error) {
         let errorMessage = "Backend cannot be reached. The game cannot start.";
         if (error?.response?.data?.message)
@@ -59,11 +85,15 @@ export default defineComponent({
   mounted() {
     // Check for backend availability
     this.checkBackend();
+    this.loadAssets();
   },
   computed: {
     marginStyle() {
       if (this.$route.name === "Game") return {};
       return { marginTop: "60px" };
+    },
+    loading() {
+      return this.checkingBackend || this.loadingAssets;
     },
   },
 });
