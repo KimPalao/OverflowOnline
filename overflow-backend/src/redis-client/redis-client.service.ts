@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { createClient } from 'redis';
 import { Card } from '../entity/card.entity';
 import { DbClientService } from '../db-client/db-client.service';
@@ -8,9 +8,11 @@ import { DbClientService } from '../db-client/db-client.service';
  */
 @Injectable()
 export class RedisClientService {
-  constructor(private readonly dbClientService: DbClientService){}
+  constructor(private readonly dbClientService: DbClientService) {}
 
   private client = createClient({ host: process.env.REDIS_HOST });
+
+  private logger: Logger = new Logger('RedisClient');
 
   /**
    * Gets the value stored in `key` from the Redis store
@@ -58,20 +60,20 @@ export class RedisClientService {
     });
   }
 
-    /**
+  /**
    * Gets the value at key.field
    *
    * @param key - The key of the object to store in
    * @param field - The property of the object to set
    */
-    async hget(key: string, field: string): Promise<string> {
-      return await new Promise<string>((resolve, reject) => {
-        this.client.hget(key, field, (err, value) => {
-          if (err) reject(err);
-          resolve(value);
-        });
+  async hget(key: string, field: string): Promise<string> {
+    return await new Promise<string>((resolve, reject) => {
+      this.client.hget(key, field, (err, value) => {
+        if (err) reject(err);
+        resolve(value);
       });
-    }
+    });
+  }
 
   /**
    * Pushes `value` to the end of the list at `key`
@@ -262,6 +264,7 @@ export class RedisClientService {
     multi.del(`host-${playerId}`);
     return await new Promise((resolve, reject) => {
       multi.exec((err, val) => {
+        this.logger.debug(val);
         if (err) reject(err);
         resolve(val);
       });
@@ -336,7 +339,10 @@ export class RedisClientService {
     for (const player of players) {
       for (let i = 0; i < 5; i++) {
         const randomCard = cards[Math.floor(Math.random() * cards.length)];
-        multi.rpush(`game-${lobbyCode}-player-${player.playerId}-hand`, randomCard.id.toString());
+        multi.rpush(
+          `game-${lobbyCode}-player-${player.playerId}-hand`,
+          randomCard.id.toString(),
+        );
       }
       multi.hset(`game-${lobbyCode}-score`, player.playerId, 0);
     }
@@ -349,7 +355,9 @@ export class RedisClientService {
   }
 
   async getPlayerScore(lobbyCode: string, playerId: string): Promise<number> {
-    const score = parseInt(await this.hget(`game-${lobbyCode}-score`, playerId));
+    const score = parseInt(
+      await this.hget(`game-${lobbyCode}-score`, playerId),
+    );
     if (isNaN(score)) return 0;
     return score;
   }
@@ -360,9 +368,12 @@ export class RedisClientService {
     for (const player of players) {
       playerData.push({
         ...player,
-        numberOfCards: await this.getPlayerHandCount(lobbyCode, player.playerId),
-        score: await this.getPlayerScore(lobbyCode, player.playerId)
-      })
+        numberOfCards: await this.getPlayerHandCount(
+          lobbyCode,
+          player.playerId,
+        ),
+        score: await this.getPlayerScore(lobbyCode, player.playerId),
+      });
     }
     return playerData;
   }

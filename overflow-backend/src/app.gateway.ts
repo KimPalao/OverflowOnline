@@ -258,6 +258,7 @@ export class AppGateway {
       // Inform the players of the lobby that the game has started
       this.server.in(`game-${lobbyCode}`).emit('gameStartEvent');
     } catch (error) {
+      this.logger.error(error);
       client.emit('startGameResponse', { result: false, message: error });
     }
   }
