@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { createClient } from 'redis';
+import { Card } from '../entity/card.entity';
+import { DbClientService } from '../db-client/db-client.service';
 
 /**
  * A wrapper for the redis client
  */
 @Injectable()
 export class RedisClientService {
+  constructor(private readonly dbClientService: DbClientService){}
+
   private client = createClient({ host: process.env.REDIS_HOST });
 
   /**
@@ -53,6 +57,21 @@ export class RedisClientService {
       });
     });
   }
+
+    /**
+   * Gets the value at key.field
+   *
+   * @param key - The key of the object to store in
+   * @param field - The property of the object to set
+   */
+    async hget(key: string, field: string): Promise<string> {
+      return await new Promise<string>((resolve, reject) => {
+        this.client.hget(key, field, (err, value) => {
+          if (err) reject(err);
+          resolve(value);
+        });
+      });
+    }
 
   /**
    * Pushes `value` to the end of the list at `key`
@@ -140,7 +159,6 @@ export class RedisClientService {
    * @returns A boolean indicating that a value was removed
    */
   async lrem(key: string, count: number, value: string): Promise<boolean> {
-    console.log(key, value);
     return await new Promise((resolve, reject) => {
       this.client.lrem(key, count, value, (err, value) => {
         if (err) reject(err);
@@ -304,7 +322,56 @@ export class RedisClientService {
    *
    * @param lobbyCode The code of the game to set as active
    */
-  async setGameActive(lobbyCode: string): Promise<void> {
-    await this.hset(`game-${lobbyCode}`, 'active', '1');
+  async startGame(lobbyCode: string): Promise<void> {
+    // Start a transaction
+    const multi = this.client.multi();
+
+    multi.hset(`game-${lobbyCode}`, 'active', '1', 'score', '0');
+    // Get players
+    const players = await this.getGamePlayers(lobbyCode);
+    // Get cards
+    const manager = await this.dbClientService.manager();
+    const cards = await manager.find(Card);
+    // assign cards
+    for (const player of players) {
+      for (let i = 0; i < 5; i++) {
+        const randomCard = cards[Math.floor(Math.random() * cards.length)];
+        multi.rpush(`game-${lobbyCode}-player-${player.playerId}-hand`, randomCard.id.toString());
+      }
+      multi.hset(`game-${lobbyCode}-score`, player.playerId, 0);
+    }
+    return await new Promise((resolve, reject) => {
+      multi.exec((err, val) => {
+        if (err) reject(err);
+        resolve(val);
+      });
+    });
+  }
+
+  async getPlayerScore(lobbyCode: string, playerId: string): Promise<number> {
+    const score = parseInt(await this.hget(`game-${lobbyCode}-score`, playerId));
+    if (isNaN(score)) return 0;
+    return score;
+  }
+
+  async getGamePlayerData(lobbyCode: string) {
+    const players = await this.getGamePlayers(lobbyCode);
+    const playerData = [];
+    for (const player of players) {
+      playerData.push({
+        ...player,
+        numberOfCards: await this.getPlayerHandCount(lobbyCode, player.playerId),
+        score: await this.getPlayerScore(lobbyCode, player.playerId)
+      })
+    }
+    return playerData;
+  }
+
+  async getPlayerHandCount(lobbyCode: string, playerId: string) {
+    return await this.llen(`game-${lobbyCode}-player-${playerId}-hand`);
+  }
+
+  async getPlayerHand(lobbyCode: string, playerId: string) {
+    return await this.getList(`game-${lobbyCode}-player-${playerId}-hand`);
   }
 }

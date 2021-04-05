@@ -71,10 +71,12 @@ export default defineComponent({
               img.src = `${this.$socket.io.uri}/${card.image}`;
             })
           );
+          this.store.state.cardMap[card.id] = card;
         }
         await Promise.all(promises);
         this.loadingAssets = false;
       } catch (error) {
+        console.log(error);
         let errorMessage = "Backend cannot be reached. The game cannot start.";
         if (error?.response?.data?.message)
           errorMessage += this.error = ` Error: ${error.response.data.message}`;

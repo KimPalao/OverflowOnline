@@ -11,6 +11,8 @@ const state = reactive({
    * @type string
    */
   lobbyCode: "",
+
+  cardMap: {}
 });
 
 export default { state };

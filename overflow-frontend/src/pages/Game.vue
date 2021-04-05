@@ -4,21 +4,27 @@
       <div class="card" v-for="card in player4.numberOfCards"></div>
       <div>
         <p>{{ player4.displayName }}</p>
-        <p v-if="player4.score">{{ scoreDisplay(player4.score) }}</p>
+        <p v-if="scoreExists(player4.score)">
+          {{ scoreDisplay(player4.score) }}
+        </p>
       </div>
     </div>
     <div id="left-cards">
       <div class="card" v-for="card in player2.numberOfCards"></div>
       <div>
         <p>{{ player2.displayName }}</p>
-        <p v-if="player2.score">{{ scoreDisplay(player2.score) }}</p>
+        <p v-if="scoreExists(player2.score)">
+          {{ scoreDisplay(player2.score) }}
+        </p>
       </div>
     </div>
     <div id="right-cards">
       <div class="card" v-for="card in player3.numberOfCards"></div>
       <div>
         <p>{{ player3.displayName }}</p>
-        <p v-if="player3.score">{{ scoreDisplay(player3.score) }}</p>
+        <p v-if="scoreExists(player3.score)">
+          {{ scoreDisplay(player3.score) }}
+        </p>
       </div>
     </div>
     <div id="bottom-cards">
@@ -26,7 +32,7 @@
         class="card"
         v-for="(card, index) in hand"
         :key="index"
-        :style="cardStyle(card.image)"
+        :style="cardStyle(store.state.cardMap[card].image)"
       ></div>
       <div>
         <p>You</p>
@@ -43,7 +49,7 @@
 
     <div id="last-card">
       <h1>Last Card:</h1>
-      <div class="card">10</div>
+      <div class="card">&nbsp;</div>
     </div>
   </div>
 </template>
@@ -69,7 +75,7 @@ export default defineComponent({
       players: Array<any>;
       hand: Array<any>;
     }) {
-      this.players = players;
+      this.players = players.filter((p) => p.playerId !== this.$socket.id);
       this.hand = hand;
     },
   },
@@ -103,6 +109,9 @@ export default defineComponent({
     },
     scoreDisplay(points: number) {
       return points.toString(2).padStart(3, "0");
+    },
+    scoreExists(score: any) {
+      return !isNaN(score) && typeof score === "number";
     },
   },
   mounted() {

@@ -254,7 +254,7 @@ export class AppGateway {
           message: 'Cannot start game with only one player',
         });
       }
-      await this.redis.setGameActive(lobbyCode);
+      await this.redis.startGame(lobbyCode);
       // Inform the players of the lobby that the game has started
       this.server.in(`game-${lobbyCode}`).emit('gameStartEvent');
     } catch (error) {
@@ -265,49 +265,11 @@ export class AppGateway {
   @SubscribeMessage('getGameData')
   async getGameData(client: Socket, lobbyCode: string): Promise<void> {
     // Return  ahard-coded response for now
+    const players = await this.redis.getGamePlayerData(lobbyCode);
+    const hand = await this.redis.getPlayerHand(lobbyCode, client.id);
     client.emit('getGameDataResponse', {
-      players: [
-        {
-          displayName: 'Ozzy',
-          playerId: '162',
-          numberOfCards: 5,
-          score: 4,
-        },
-        {
-          displayName: 'Melvine',
-          playerId: '147',
-          numberOfCards: 5,
-          score: 5,
-        },
-        {
-          displayName: 'Reihan',
-          playerId: '172',
-          numberOfCards: 5,
-          score: 6,
-        },
-      ],
-      hand: [
-        {
-          id: 1,
-          image: 'assets/placeholder.jpg',
-        },
-        {
-          id: 1,
-          image: 'assets/placeholder.jpg',
-        },
-        {
-          id: 1,
-          image: 'assets/placeholder.jpg',
-        },
-        {
-          id: 1,
-          image: 'assets/placeholder.jpg',
-        },
-        {
-          id: 1,
-          image: 'assets/placeholder.jpg',
-        },
-      ],
+      players,
+      hand,
     });
   }
 }
