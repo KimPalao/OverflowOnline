@@ -1,7 +1,7 @@
 <template>
   <div class="grid">
     <div id="top-cards">
-      <div class="card" v-for="card in player4.numberOfCards"></div>
+      <card v-for="card in player4.numberOfCards" :obscured="true" />
       <div>
         <p>{{ player4.displayName }}</p>
         <p v-if="scoreExists(player4.score)">
@@ -10,7 +10,12 @@
       </div>
     </div>
     <div id="left-cards">
-      <div class="card" v-for="card in player2.numberOfCards"></div>
+      <!-- <div class="card" v-for="card in player2.numberOfCards"></div> -->
+      <card
+        v-for="card in player2.numberOfCards"
+        :obscured="true"
+        :horizontal="true"
+      />
       <div>
         <p>{{ player2.displayName }}</p>
         <p v-if="scoreExists(player2.score)">
@@ -19,7 +24,11 @@
       </div>
     </div>
     <div id="right-cards">
-      <div class="card" v-for="card in player3.numberOfCards"></div>
+      <card
+        v-for="card in player3.numberOfCards"
+        :obscured="true"
+        :horizontal="true"
+      />
       <div>
         <p>{{ player3.displayName }}</p>
         <p v-if="scoreExists(player3.score)">
@@ -28,37 +37,41 @@
       </div>
     </div>
     <div id="bottom-cards">
-      <div
-        class="card"
+      <card
         v-for="(card, index) in hand"
         :key="index"
-        :style="cardStyle(store.state.cardMap[card].image)"
-      ></div>
+        :image="cardImageUrl(store.state.cardMap[card].image)"
+        :outlined="true"
+      />
       <div>
-        <p>You</p>
+        <p>{{ store.state.displayName }}</p>
         <p>{{ scoreDisplay(score) }}</p>
       </div>
     </div>
 
     <div id="game-state">
-      <div class="card">{{ boardNthNumber(3) }}</div>
-      <div class="card">{{ boardNthNumber(2) }}</div>
-      <div class="card">{{ boardNthNumber(1) }}</div>
-      <div class="card">{{ boardNthNumber(0) }}</div>
+      <card :text="boardNthNumber(3)" :outlined="true" />
+      <card :text="boardNthNumber(2)" :outlined="true" />
+      <card :text="boardNthNumber(1)" :outlined="true" />
+      <card :text="boardNthNumber(0)" :outlined="true" />
     </div>
 
     <div id="last-card">
       <h1>Last Card:</h1>
-      <div class="card">&nbsp;</div>
+      <card text="" :outlined="true" />
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "@vue/runtime-core";
+import Card from "../components/Card.vue";
 
 export default defineComponent({
   name: "Game",
+  components: {
+    Card,
+  },
   data() {
     return {
       players: [],
@@ -130,17 +143,6 @@ body {
   font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
-.card {
-  width: calc(59mm * #{$factor});
-  height: calc(86mm * #{$factor});
-  background: #000;
-  display: inline-block;
-  border-radius: 5%;
-  line-height: calc(#{$height} * #{$factor});
-  text-align: center;
-  font-size: 64px;
-}
-
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
@@ -163,13 +165,6 @@ body {
   align-items: flex-end;
 }
 
-#bottom-cards .card,
-#game-state .card,
-#last-card .card {
-  background: white;
-  box-shadow: 0 0 0 1pt black;
-}
-
 #top-cards,
 #bottom-cards {
   display: flex;
@@ -183,15 +178,6 @@ body {
   grid-row-end: 4;
   display: flex;
   flex-direction: column;
-
-  .card {
-    width: calc(#{$height} * #{$factor});
-    height: calc(#{$width} * #{$factor});
-    display: block;
-    &:not(:nth-last-of-type(2)) {
-      margin-bottom: 12px;
-    }
-  }
 }
 
 #game-state {
