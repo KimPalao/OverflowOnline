@@ -428,6 +428,7 @@ export class RedisClientService {
       data: {
         playerId,
         cardId,
+        handSize: hand.length,
       },
     });
     // check card type

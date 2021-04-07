@@ -89,6 +89,7 @@ export default defineComponent({
   data() {
     return {
       players: [],
+      playerMap: {},
       hand: [],
       board: 0,
       score: 0,
@@ -106,6 +107,9 @@ export default defineComponent({
       hand: Array<any>;
     }) {
       this.players = players.filter((p) => p.playerId !== this.$socket.id);
+      for (let i = 0; i < players.length; i++) {
+        this.playerMap[players[i].playerId] = i;
+      }
       this.hand = hand;
     },
     playerScored({
@@ -120,7 +124,15 @@ export default defineComponent({
     boardUpdated({ newScore }: { newScore: number }) {
       this.board = newScore;
     },
-    cardPlayed({ playerId, cardId }: { playerId: string; cardId: number }) {
+    cardPlayed({
+      playerId,
+      cardId,
+      handSize,
+    }: {
+      playerId: string;
+      cardId: number;
+      handSize: number;
+    }) {
       if (playerId === this.$socket.id) {
         if (cardId === this.hand[this.lastSubmittedCardIndex]) {
           this.hand.splice(this.lastSubmittedCardIndex, 1);
@@ -128,6 +140,7 @@ export default defineComponent({
         this.focusedCardIndex = -1;
         this.lastSubmittedCardIndex = -1;
       } else {
+        this.players[this.playerMap[playerId]].numberOfCards = handSize;
         // TODO: Implement in a future sprint
       }
       this.lastPlayedCard = cardId;

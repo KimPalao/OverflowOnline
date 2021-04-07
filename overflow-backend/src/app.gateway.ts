@@ -291,7 +291,7 @@ export class AppGateway {
   ): Promise<void> {
     const emitQueue = await this.redis.playCard(lobbyCode, playerId, cardIndex);
     for (const event of emitQueue) {
-      client.emit(event.event, event.data);
+      this.server.in(`game-${lobbyCode}`).emit(event.event, event.data);
     }
   }
 }
