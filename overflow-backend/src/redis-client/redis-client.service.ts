@@ -1,18 +1,41 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createClient } from 'redis';
-import { Card } from '../entity/card.entity';
+import { Card, CardType } from '../entity/card.entity';
 import { DbClientService } from '../db-client/db-client.service';
+import { exec } from 'node:child_process';
+import { SocketEvent } from 'src/types/socket-event';
 
 /**
  * A wrapper for the redis client
  */
 @Injectable()
 export class RedisClientService {
+  private cardMap: Record<string, Card> = {};
+  private cardsCached = false;
   constructor(private readonly dbClientService: DbClientService) {}
+
+  async cacheCards() {
+    if (this.cardsCached) return;
+    const manager = await this.dbClientService.manager();
+    const cards = await manager.find(Card);
+    for (const card of cards) {
+      this.cardMap[card.id.toString()] = card;
+    }
+    this.cardsCached = true;
+  }
 
   private client = createClient({ host: process.env.REDIS_HOST });
 
   private logger: Logger = new Logger('RedisClient');
+
+  async execMulti(multi): Promise<void> {
+    return await new Promise((resolve, reject) => {
+      multi.exec((err, val) => {
+        if (err) reject(err);
+        resolve(val);
+      });
+    });
+  }
 
   /**
    * Gets the value stored in `key` from the Redis store
@@ -217,12 +240,7 @@ export class RedisClientService {
     multi.rpush(`game-${lobbyCode}-players`, hostId);
     // Set `host-${hostId}` = lobbyCode
     multi.set(`host-${hostId}`, lobbyCode);
-    return await new Promise((resolve, reject) => {
-      multi.exec((err, val) => {
-        if (err) reject(err);
-        resolve(val);
-      });
-    });
+    return await this.execMulti(multi);
   }
 
   /**
@@ -262,13 +280,7 @@ export class RedisClientService {
     multi.del(`game-${lobbyCode}-players`);
     // Remove the host-lobby mapping
     multi.del(`host-${playerId}`);
-    return await new Promise((resolve, reject) => {
-      multi.exec((err, val) => {
-        this.logger.debug(val);
-        if (err) reject(err);
-        resolve(val);
-      });
-    });
+    return await this.execMulti(multi);
   }
 
   /**
@@ -287,7 +299,9 @@ export class RedisClientService {
    * @param lobbyCode - The code of the lobby / game to retrieve players from
    * @returns - The list of players
    */
-  async getGamePlayers(lobbyCode: string): Promise<Array<any>> {
+  async getGamePlayers(
+    lobbyCode: string,
+  ): Promise<Array<{ playerId: string; displayName: string }>> {
     const players = await this.getList(`game-${lobbyCode}-players`);
     const playerObjects = [];
     for (const player of players) {
@@ -329,7 +343,7 @@ export class RedisClientService {
     // Start a transaction
     const multi = this.client.multi();
 
-    multi.hset(`game-${lobbyCode}`, 'active', '1', 'score', '0');
+    multi.hmset(`game-${lobbyCode}`, 'active', '1', 'score', '0');
     // Get players
     const players = await this.getGamePlayers(lobbyCode);
     // Get cards
@@ -346,12 +360,18 @@ export class RedisClientService {
       }
       multi.hset(`game-${lobbyCode}-score`, player.playerId, 0);
     }
-    return await new Promise((resolve, reject) => {
-      multi.exec((err, val) => {
-        if (err) reject(err);
-        resolve(val);
-      });
-    });
+    return await this.execMulti(multi);
+  }
+
+  async getGameScore(lobbyCode: string): Promise<number> {
+    const scoreStr = await this.hget(`game-${lobbyCode}`, 'score');
+    const score = parseInt(scoreStr);
+    if (isNaN(score)) return 0;
+    return score;
+  }
+
+  async setGameScore(lobbyCode: string, score: number): Promise<void> {
+    return await this.hset(`game-${lobbyCode}`, 'score', score.toString());
   }
 
   async getPlayerScore(lobbyCode: string, playerId: string): Promise<number> {
@@ -382,7 +402,84 @@ export class RedisClientService {
     return await this.llen(`game-${lobbyCode}-player-${playerId}-hand`);
   }
 
-  async getPlayerHand(lobbyCode: string, playerId: string) {
+  async getPlayerHand(
+    lobbyCode: string,
+    playerId: string,
+  ): Promise<Array<string>> {
     return await this.getList(`game-${lobbyCode}-player-${playerId}-hand`);
+  }
+
+  async playCard(
+    lobbyCode: string,
+    playerId: string,
+    cardIndex: number,
+  ): Promise<Array<SocketEvent>> {
+    await this.cacheCards();
+    const emitQueue: Array<SocketEvent> = [];
+    const players = await this.getGamePlayers(lobbyCode);
+    const multi = this.client.multi();
+    // get player's hand
+    const hand = await this.getPlayerHand(lobbyCode, playerId);
+    // get card
+    const cardId = hand.splice(cardIndex, 1)[0];
+    const card = this.cardMap[cardId];
+    emitQueue.push({
+      event: 'cardPlayed',
+      data: {
+        playerId,
+        cardId,
+      },
+    });
+    // check card type
+    switch (card.type) {
+      case CardType.Normal:
+        let score = await this.getGameScore(lobbyCode);
+        score += card.value;
+        if (score === 15) {
+          // 1111
+          score %= 16;
+          emitQueue.push({
+            event: 'playerScored',
+            data: {
+              playerId,
+              newScore: (await this.getPlayerScore(lobbyCode, playerId)) + 1,
+            },
+          });
+        } else if (score >= 16) {
+          // Overflow
+          score %= 16;
+          for (const player of players) {
+            if (player.playerId === playerId) continue;
+            emitQueue.push({
+              event: 'playerScored',
+              data: {
+                playerId: player.playerId,
+                newScore:
+                  (await this.getPlayerScore(lobbyCode, player.playerId)) + 1,
+              },
+            });
+          }
+        }
+        emitQueue.push({
+          event: 'boardUpdated',
+          data: {
+            newScore: score,
+          },
+        });
+        multi.hset(`game-${lobbyCode}`, 'score', score.toString());
+        break;
+      case CardType.Combo:
+        // TODO: Implement in a future sprint
+        break;
+      case CardType.Special:
+        // TODO: Implement in a future sprint
+        break;
+      default:
+        throw new RangeError('Card Type not supported');
+    }
+    multi.del(`game-${lobbyCode}-player-${playerId}-hand`);
+    multi.rpush(`game-${lobbyCode}-player-${playerId}-hand`, hand);
+    await this.execMulti(multi);
+    return emitQueue;
   }
 }

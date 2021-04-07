@@ -16,7 +16,7 @@ app.use(router);
 
 app.use(new VueSocketIO({
   debug: true,
-  connection: `http://localhost:${import.meta.env.VITE_BACKEND_PORT}`
+  connection: `${import.meta.env.VITE_HOST}:${import.meta.env.VITE_BACKEND_PORT}`
 }));
 
 app.use(VueAxios, axios);

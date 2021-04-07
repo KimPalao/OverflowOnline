@@ -42,11 +42,22 @@
         :key="index"
         :image="cardImageUrl(store.state.cardMap[card].image)"
         :outlined="true"
+        :class="{ 'focused-card': focusedCardIndex === index }"
+        @click="focusCard(index)"
       />
       <div>
         <p>{{ store.state.displayName }}</p>
         <p>{{ scoreDisplay(score) }}</p>
       </div>
+      <div class="spacer"></div>
+      <button
+        class="play-card-button"
+        v-if="focusedCardIndex >= 0"
+        @click="playCard"
+      >
+        Play <br />
+        Card
+      </button>
     </div>
 
     <div id="game-state">
@@ -58,7 +69,10 @@
 
     <div id="last-card">
       <h1>Last Card:</h1>
-      <card text="" :outlined="true" />
+      <card
+        :image="cardImageUrl(store.state.cardMap[lastPlayedCard]?.image)"
+        :outlined="true"
+      />
     </div>
   </div>
 </template>
@@ -77,7 +91,10 @@ export default defineComponent({
       players: [],
       hand: [],
       board: 0,
-      score: 6,
+      score: 0,
+      focusedCardIndex: -1,
+      lastSubmittedCardIndex: -1,
+      lastPlayedCard: "",
     };
   },
   sockets: {
@@ -90,6 +107,30 @@ export default defineComponent({
     }) {
       this.players = players.filter((p) => p.playerId !== this.$socket.id);
       this.hand = hand;
+    },
+    playerScored({
+      playerId,
+      newScore,
+    }: {
+      playerId: string;
+      newScore: number;
+    }) {
+      this.players[playerId].score = newScore;
+    },
+    boardUpdated({ newScore }: { newScore: number }) {
+      this.board = newScore;
+    },
+    cardPlayed({ playerId, cardId }: { playerId: string; cardId: number }) {
+      if (playerId === this.$socket.id) {
+        if (cardId === this.hand[this.lastSubmittedCardIndex]) {
+          this.hand.splice(this.lastSubmittedCardIndex, 1);
+        }
+        this.focusedCardIndex = -1;
+        this.lastSubmittedCardIndex = -1;
+      } else {
+        // TODO: Implement in a future sprint
+      }
+      this.lastPlayedCard = cardId;
     },
   },
   computed: {
@@ -112,7 +153,10 @@ export default defineComponent({
     },
     cardImageUrl(url: string) {
       // @ts-ignore
-      return `http://localhost:${import.meta.env.VITE_BACKEND_PORT}/${url}`;
+      return `${import.meta.env.VITE_HOST}:${
+        // @ts-ignore
+        import.meta.env.VITE_BACKEND_PORT
+      }/${url}`;
     },
     cardStyle(url: string) {
       return {
@@ -126,10 +170,33 @@ export default defineComponent({
     scoreExists(score: any) {
       return !isNaN(score) && typeof score === "number";
     },
+    focusCard(index: number) {
+      this.focusedCardIndex = index;
+    },
+    unfocusCard(event: Event) {
+      if (!event.target) return;
+      const target = event.target as HTMLElement;
+      if (!target.classList) return;
+      const ignoredClasses = ["card", "play-card-button"];
+      const classes = Array.from(target.classList);
+      const intersection = classes.filter((cls) =>
+        ignoredClasses.includes(cls)
+      );
+      if (intersection.length === 0) this.focusedCardIndex = -1;
+    },
+    playCard() {
+      if (this.focusedCardIndex < 0) return;
+      this.lastSubmittedCardIndex = this.focusedCardIndex;
+      this.$socket.emit("playCard", {
+        lobbyCode: this.store.state.lobbyCode,
+        playerId: this.$socket.id,
+        cardIndex: this.focusedCardIndex,
+      });
+    },
   },
   mounted() {
     this.$socket.emit("getGameData", this.store.state.lobbyCode);
-    console.log("Game");
+    document.body.addEventListener("click", this.unfocusCard);
   },
 });
 </script>
@@ -163,12 +230,17 @@ body {
   grid-column-end: 5;
   grid-row-start: 4;
   align-items: flex-end;
+
+  .card:hover {
+    cursor: pointer;
+  }
 }
 
 #top-cards,
 #bottom-cards {
   display: flex;
   gap: 12px;
+  align-items: center;
   justify-content: center;
 }
 
@@ -209,5 +281,23 @@ p {
   color: white;
   font-size: 20px;
   text-shadow: #000 02px 1px 1px;
+}
+
+.card {
+  transform: scale(1) translateY(0);
+  transition: transform 0.1s;
+  &.focused-card {
+    transform: scale(1.4) translateY(-30px);
+  }
+}
+
+.play-card-button {
+  margin: 32px;
+  font-size: 24px;
+  background: green;
+  border: 1px solid black;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
 }
 </style>

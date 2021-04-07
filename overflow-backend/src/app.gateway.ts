@@ -38,7 +38,9 @@ export class AppGateway {
    * @returns An empty message
    */
   handleConnection(client: Socket): string {
-    this.logger.log(`Client connected: ${client.id}`);
+    this.logger.log(
+      `Client connected: ${client.id} from ${client.conn.remoteAddress}`,
+    );
     client.emit('debug', { message: 'Hello world', arg1: 'Hi', arg2: 'there' });
     return '';
   }
@@ -272,5 +274,24 @@ export class AppGateway {
       players,
       hand,
     });
+  }
+
+  @SubscribeMessage('playCard')
+  async playCard(
+    client: Socket,
+    {
+      lobbyCode,
+      playerId,
+      cardIndex,
+    }: {
+      lobbyCode: string;
+      playerId: string;
+      cardIndex: number;
+    },
+  ): Promise<void> {
+    const emitQueue = await this.redis.playCard(lobbyCode, playerId, cardIndex);
+    for (const event of emitQueue) {
+      client.emit(event.event, event.data);
+    }
   }
 }
