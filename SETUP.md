@@ -16,15 +16,19 @@
 
 ### Steps
 
-1. Create a copy of the `local.env` file named `.env` in the `.devcontainer` folder
+1. Run `update-env.sh`
 
-    `cp local.env .devcontainer/.env`
+    `source update-env.sh`
 
-2. Start the frontend by running `npm run dev` in the `overflow-frontend` folder
+1. Run the migrations
+
+    `cd overflow-backend && npm run typeorm migration:run`
+
+1. Start the frontend by running `npm run dev` in the `overflow-frontend` folder
 
     `cd overflow-frontend && npm run dev`
 
-3. Start the backend by running `npm run start:dev` in the `overflow-backend` folder
+1. Start the backend by running `npm run start:dev` in the `overflow-backend` folder
 
     `cd overflow-backend && npm run start:dev`
 

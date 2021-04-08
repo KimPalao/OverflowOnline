@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createClient } from 'redis';
 import { Card, CardType } from '../entity/card.entity';
 import { DbClientService } from '../db-client/db-client.service';
-import { exec } from 'node:child_process';
 import { SocketEvent } from 'src/types/socket-event';
 
 /**
