@@ -96,6 +96,7 @@ export default defineComponent({
       focusedCardIndex: -1,
       lastSubmittedCardIndex: -1,
       lastPlayedCard: "",
+      allowedToAct: false,
     };
   },
   sockets: {
@@ -145,6 +146,9 @@ export default defineComponent({
       }
       this.lastPlayedCard = cardId;
     },
+    actionGiven() {
+      this.allowedToAct = true;
+    },
   },
   computed: {
     player2() {
@@ -184,6 +188,7 @@ export default defineComponent({
       return !isNaN(score) && typeof score === "number";
     },
     focusCard(index: number) {
+      if (!this.allowedToAct) return;
       this.focusedCardIndex = index;
     },
     unfocusCard(event: Event) {
@@ -198,13 +203,14 @@ export default defineComponent({
       if (intersection.length === 0) this.focusedCardIndex = -1;
     },
     playCard() {
-      if (this.focusedCardIndex < 0) return;
+      if (this.focusedCardIndex < 0 || !this.allowedToAct) return;
       this.lastSubmittedCardIndex = this.focusedCardIndex;
       this.$socket.emit("playCard", {
         lobbyCode: this.store.state.lobbyCode,
         playerId: this.$socket.id,
         cardIndex: this.focusedCardIndex,
       });
+      this.allowedToAct = false;
     },
   },
   mounted() {

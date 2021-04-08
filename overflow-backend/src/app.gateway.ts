@@ -270,10 +270,13 @@ export class AppGateway {
     // Return  ahard-coded response for now
     const players = await this.redis.getGamePlayerData(lobbyCode);
     const hand = await this.redis.getPlayerHand(lobbyCode, client.id);
+    const host = await this.redis.getHostOfGame(lobbyCode);
     client.emit('getGameDataResponse', {
       players,
       hand,
     });
+    // Give the host the first turn
+    this.server.to(host).emit('actionGiven');
   }
 
   @SubscribeMessage('playCard')

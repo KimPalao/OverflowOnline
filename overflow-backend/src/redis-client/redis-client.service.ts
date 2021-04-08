@@ -253,6 +253,10 @@ export class RedisClientService {
     return await this.get(`host-${hostId}`);
   }
 
+  async getHostOfGame(lobbyCode: string): Promise<string> {
+    return await this.hget(`game-${lobbyCode}`, 'host');
+  }
+
   /**
    * Returns the name of a player given their Socket.IO id
    *
