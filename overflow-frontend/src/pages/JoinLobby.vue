@@ -56,6 +56,7 @@ export default defineComponent({
     },
   },
   methods: {
+    // Players get an error alert if the lobby code entered is blank
     handleSubmit() {
       if (this.lobbyCode.trim().length == 0) {
         alert("Code cannot be blank");
