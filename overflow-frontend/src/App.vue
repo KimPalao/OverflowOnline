@@ -45,6 +45,7 @@ export default defineComponent({
     },
   },
   methods: {
+    // Alerts with corresponding error if backend is not available
     async checkBackend() {
       try {
         await this.axios.get(this.$socket.io.uri);
@@ -57,6 +58,8 @@ export default defineComponent({
       }
     },
     async loadAssets() {
+    // Loads assets
+    // Alerts with corresponding error if backend is not available
       try {
         const response = await this.axios.get(`${this.$socket.io.uri}/cards`);
         const cards = response.data.data;
@@ -87,6 +90,7 @@ export default defineComponent({
   mounted() {
     // Check for backend availability
     this.checkBackend();
+    // Loads assets
     this.loadAssets();
   },
   computed: {

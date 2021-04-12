@@ -1,5 +1,7 @@
 import { Entity, Column, ObjectID, ObjectIdColumn } from 'typeorm';
-
+/**
+ * Wrapper for cards to be played
+ */
 @Entity()
 export class Card {
   @ObjectIdColumn()

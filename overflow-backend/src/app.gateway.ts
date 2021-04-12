@@ -294,6 +294,7 @@ export class AppGateway {
   ): Promise<void> {
     const emitQueue = await this.redis.playCard(lobbyCode, playerId, cardIndex);
     for (const event of emitQueue) {
+      // Give the correct lobby the turn info
       this.server.in(`game-${lobbyCode}`).emit(event.event, event.data);
     }
   }

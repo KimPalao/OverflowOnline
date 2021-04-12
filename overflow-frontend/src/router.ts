@@ -6,7 +6,9 @@ import CreateLobby from './pages/CreateLobby.vue';
 import JoinLobby from './pages/JoinLobby.vue';
 import Game from './pages/Game.vue';
 import store from './store';
-
+/**
+ * Routes for the web app
+ */
 const routes = [
   { path: '/', name: 'Home', component: Home },
   { path: '/lobby-menu', name: 'LobbyMenu', component: LobbyMenu },
