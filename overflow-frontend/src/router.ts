@@ -22,9 +22,8 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from) => {
-  if (to.name === "Game") {
-    // For now, allow the game to be acessed directly
-    return true;
+  if (to.name === "Game" && store.state.lobbyCode.length === 0) {
+    return { name: "LobbyMenu" };
   } 
   if (
     store.state.displayName.length === 0 &&
