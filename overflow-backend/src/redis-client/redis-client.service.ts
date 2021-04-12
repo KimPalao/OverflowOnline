@@ -274,9 +274,12 @@ export class RedisClientService {
   async disconnectPlayer(playerId: string): Promise<void> {
     // Get the lobby code that the player is a host of
     // so it can be freed from memory if it exists
-    const lobbyCode = this.getGameOfHost(playerId);
+    const lobbyCode = await this.getGameOfHost(playerId);
+    this.logger.debug(`Removing game: ${lobbyCode}`);
     // Start a transaction
     const multi = this.client.multi();
+    // Remove the player information
+    multi.del(`${playerId}-display-name`);
     // Remove the game information
     multi.del(`game-${lobbyCode}`);
     // Remove the game player list
