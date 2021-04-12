@@ -358,6 +358,7 @@ export class RedisClientService {
     // assign cards
     for (const player of players) {
       for (let i = 0; i < 5; i++) {
+        // Random card assigned
         const randomCard = cards[Math.floor(Math.random() * cards.length)];
         multi.rpush(
           `game-${lobbyCode}-player-${player.playerId}-hand`,
@@ -368,18 +369,18 @@ export class RedisClientService {
     }
     return await this.execMulti(multi);
   }
-
+  // Retrieve counter state
   async getGameScore(lobbyCode: string): Promise<number> {
     const scoreStr = await this.hget(`game-${lobbyCode}`, 'score');
     const score = parseInt(scoreStr);
     if (isNaN(score)) return 0;
     return score;
   }
-
+  // Sets the counter state
   async setGameScore(lobbyCode: string, score: number): Promise<void> {
     return await this.hset(`game-${lobbyCode}`, 'score', score.toString());
   }
-
+  // Retrieve individual player score
   async getPlayerScore(lobbyCode: string, playerId: string): Promise<number> {
     const score = parseInt(
       await this.hget(`game-${lobbyCode}-score`, playerId),
@@ -387,7 +388,7 @@ export class RedisClientService {
     if (isNaN(score)) return 0;
     return score;
   }
-
+  // Retrieve player data
   async getGamePlayerData(lobbyCode: string) {
     const players = await this.getGamePlayers(lobbyCode);
     const playerData = [];
@@ -403,18 +404,18 @@ export class RedisClientService {
     }
     return playerData;
   }
-
+  // Retrieve number of cards in a players hand
   async getPlayerHandCount(lobbyCode: string, playerId: string) {
     return await this.llen(`game-${lobbyCode}-player-${playerId}-hand`);
   }
-
+  // Retrieve cards in a players hand
   async getPlayerHand(
     lobbyCode: string,
     playerId: string,
   ): Promise<Array<string>> {
     return await this.getList(`game-${lobbyCode}-player-${playerId}-hand`);
   }
-
+  // Play a card from a players hand
   async playCard(
     lobbyCode: string,
     playerId: string,

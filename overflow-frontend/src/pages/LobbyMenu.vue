@@ -13,6 +13,7 @@ import { defineComponent } from "vue";
 export default defineComponent({
   name: "LobbyMenu",
   methods: {
+    // Either join or create a lobby
     CreateLobby() {
       this.$router.push({ name: "CreateLobby" });
     },

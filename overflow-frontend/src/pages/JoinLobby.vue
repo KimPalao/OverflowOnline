@@ -16,7 +16,9 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-
+/**
+ * This is the JoinLobby page. Here, the user will be able to join a lobby.
+ */
 export default defineComponent({
   data() {
     return {

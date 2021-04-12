@@ -59,6 +59,7 @@ export default defineComponent({
       displayName: string;
       playerId: string;
     }) {
+      // Sets players name in lobby
       this.players.push({
         displayName,
         playerId,
