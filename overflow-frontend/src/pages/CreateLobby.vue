@@ -58,6 +58,7 @@ export default defineComponent({
     },
   },
   methods: {
+    // Handles creation of lobby
     handleSubmit() {
       if (this.lobbyCode.trim().length == 0) {
         alert("Code cannot be blank");

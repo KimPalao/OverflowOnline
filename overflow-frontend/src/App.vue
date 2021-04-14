@@ -1,7 +1,9 @@
 <template>
   <div v-if="error">{{ error }}</div>
   <div v-else-if="loading">Loading</div>
-  <router-view v-else />
+  <div class="wrapper" :style="marginStyle" v-else>
+    <router-view />
+  </div>
 </template>
 
 <script lang="ts">
@@ -15,7 +17,8 @@ export default defineComponent({
   name: "App",
   data() {
     return {
-      loading: true,
+      checkingBackend: true,
+      loadingAssets: true,
       error: "",
     };
   },
@@ -42,11 +45,41 @@ export default defineComponent({
     },
   },
   methods: {
+    // Alerts with corresponding error if backend is not available
     async checkBackend() {
       try {
         await this.axios.get(this.$socket.io.uri);
-        this.loading = false;
+        this.checkingBackend = false;
       } catch (error) {
+        let errorMessage = "Backend cannot be reached. The game cannot start.";
+        if (error?.response?.data?.message)
+          errorMessage += this.error = ` Error: ${error.response.data.message}`;
+        alert(errorMessage);
+      }
+    },
+    async loadAssets() {
+    // Loads assets
+    // Alerts with corresponding error if backend is not available
+      try {
+        const response = await this.axios.get(`${this.$socket.io.uri}/cards`);
+        const cards = response.data.data;
+        const promises = [];
+        for (const card of cards) {
+          promises.push(
+            new Promise<void>((resolve, reject) => {
+              const img = new Image();
+              img.onload = function () {
+                resolve();
+              };
+              img.src = `${this.$socket.io.uri}/${card.image}`;
+            })
+          );
+          this.store.state.cardMap[card.id] = card;
+        }
+        await Promise.all(promises);
+        this.loadingAssets = false;
+      } catch (error) {
+        console.log(error);
         let errorMessage = "Backend cannot be reached. The game cannot start.";
         if (error?.response?.data?.message)
           errorMessage += this.error = ` Error: ${error.response.data.message}`;
@@ -57,20 +90,30 @@ export default defineComponent({
   mounted() {
     // Check for backend availability
     this.checkBackend();
-
-    const route = useRoute();
-    // Do not allow user to go to pages directly
-
-    if (this.store.state.displayName.length === 0 && route.name !== "Home") {
-      // Check if the user skipped setting a username
-      this.$router.push({ name: "home" });
-    } else if (
-      // Chcek if the user skipped picking a lobby
-      this.store.state.lobbyCode.length === 0 &&
-      !["LobbyMenu", "CreateLobby", "JoinLobby"].includes(route.name.toString())
-    ) {
-      this.$router.push({ name: "LobbyMenu" });
-    }
+    // Loads assets
+    this.loadAssets();
+  },
+  computed: {
+    marginStyle() {
+      if (this.$route.name === "Game") return {};
+      return { marginTop: "60px" };
+    },
+    loading() {
+      return this.checkingBackend || this.loadingAssets;
+    },
   },
 });
 </script>
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+}
+
+.spacer {
+  flex-grow: 1;
+}
+</style>

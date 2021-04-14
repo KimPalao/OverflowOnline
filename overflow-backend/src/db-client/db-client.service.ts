@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { join } from 'path';
+import { Card } from 'src/entity/card.entity';
 import { ConnectionManager, Connection, EntityManager } from 'typeorm';
 
 /**
@@ -21,6 +23,7 @@ export class DbClientService {
       database: process.env.MONGO_INITDB_DATABASE,
       username: process.env.MONGO_INITDB_ROOT_USERNAME,
       password: process.env.MONGO_INITDB_ROOT_PASSWORD,
+      entities: [join(__dirname, '..', 'entity', '**', '*.entity.{ts,js}')],
     });
   }
 

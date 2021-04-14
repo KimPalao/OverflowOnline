@@ -38,7 +38,9 @@ export class AppGateway {
    * @returns An empty message
    */
   handleConnection(client: Socket): string {
-    this.logger.log(`Client connected: ${client.id}`);
+    this.logger.log(
+      `Client connected: ${client.id} from ${client.conn.remoteAddress}`,
+    );
     client.emit('debug', { message: 'Hello world', arg1: 'Hi', arg2: 'there' });
     return '';
   }
@@ -254,11 +256,46 @@ export class AppGateway {
           message: 'Cannot start game with only one player',
         });
       }
-      await this.redis.setGameActive(lobbyCode);
+      await this.redis.startGame(lobbyCode);
       // Inform the players of the lobby that the game has started
       this.server.in(`game-${lobbyCode}`).emit('gameStartEvent');
     } catch (error) {
+      this.logger.error(error);
       client.emit('startGameResponse', { result: false, message: error });
+    }
+  }
+
+  @SubscribeMessage('getGameData')
+  async getGameData(client: Socket, lobbyCode: string): Promise<void> {
+    // Return  ahard-coded response for now
+    const players = await this.redis.getGamePlayerData(lobbyCode);
+    const hand = await this.redis.getPlayerHand(lobbyCode, client.id);
+    const host = await this.redis.getHostOfGame(lobbyCode);
+    client.emit('getGameDataResponse', {
+      players,
+      hand,
+    });
+    // Give the host the first turn
+    this.server.to(host).emit('actionGiven');
+  }
+
+  @SubscribeMessage('playCard')
+  async playCard(
+    client: Socket,
+    {
+      lobbyCode,
+      playerId,
+      cardIndex,
+    }: {
+      lobbyCode: string;
+      playerId: string;
+      cardIndex: number;
+    },
+  ): Promise<void> {
+    const emitQueue = await this.redis.playCard(lobbyCode, playerId, cardIndex);
+    for (const event of emitQueue) {
+      // Give the correct lobby the turn info
+      this.server.in(`game-${lobbyCode}`).emit(event.event, event.data);
     }
   }
 }

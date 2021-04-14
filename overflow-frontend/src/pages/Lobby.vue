@@ -59,6 +59,7 @@ export default defineComponent({
       displayName: string;
       playerId: string;
     }) {
+      // Sets players name in lobby
       this.players.push({
         displayName,
         playerId,
@@ -78,9 +79,7 @@ export default defineComponent({
      */
     gameStartEvent() {
       console.log("Game has been started");
-      alert("Game to be implemented");
-      // TODO: Uncomment once the Game page has been created
-      // this.$router.push({ name: "Game" });
+      this.$router.push({ name: "Game" });
     },
     /**
      * Handles Socket.IO server's resposne to the startGame event emitted
