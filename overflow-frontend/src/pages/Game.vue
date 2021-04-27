@@ -221,6 +221,7 @@ export default defineComponent({
         cardsToDraw: 1,
         playerId: this.$socket.id,
       });
+      this.allowedToAct = false;
     },
     playCard() {
       if (this.focusedCardIndex < 0 || !this.allowedToAct) return;
