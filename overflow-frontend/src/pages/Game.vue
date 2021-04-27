@@ -211,6 +211,7 @@ export default defineComponent({
         cardIndex: this.focusedCardIndex,
       });
       this.allowedToAct = false;
+      
     },
   },
   mounted() {
