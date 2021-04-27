@@ -60,6 +60,7 @@
       </button>
       <button
         class="play-card-button"
+        v-if="allowedToAct == true"
         @click="drawCards"
       >
         Draw <br />
