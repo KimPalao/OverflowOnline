@@ -302,6 +302,36 @@ export class AppGateway {
     // Give turn to next player
     for(let i = 0; i < players.length; i++){
       if (playerId == players[i]['playerId']){
+        //this.server.to(players[(i+1)%players.length]['playerId']).emit('cardDrawn','1');
+        this.server.to(players[(i+1)%players.length]['playerId']).emit('actionGiven');
+      }
+    }
+  }
+
+  @SubscribeMessage('drawCards')
+  async drawCards(
+    client: Socket,
+    {
+      lobbyCode,
+      cardsToDraw,
+      playerId,
+    }: {
+      lobbyCode: string;
+      cardsToDraw: number;
+      playerId: string;
+    },
+  ): Promise<void> {
+    // Get list of players
+    const players = await this.redis.getGamePlayers(lobbyCode);
+    const emitQueueDraw = await this.redis.drawCards(lobbyCode,cardsToDraw,playerId);
+    for (const event of emitQueueDraw) {
+      // Give the correct lobby the turn info
+      this.server.in(`game-${lobbyCode}`).emit(event.event, event.data);
+    }
+    // Give turn to next player
+    for(let i = 0; i < players.length; i++){
+      if (playerId == players[i]['playerId']){
+        //this.server.to(players[(i+1)%players.length]['playerId']).emit('cardDrawn','1');
         this.server.to(players[(i+1)%players.length]['playerId']).emit('actionGiven');
       }
     }

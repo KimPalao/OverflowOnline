@@ -3,6 +3,7 @@ import { createClient } from 'redis';
 import { Card, CardType } from '../entity/card.entity';
 import { DbClientService } from '../db-client/db-client.service';
 import { SocketEvent } from 'src/types/socket-event';
+import { ConnectedSocket } from '@nestjs/websockets';
 
 /**
  * A wrapper for the redis client
@@ -415,6 +416,33 @@ export class RedisClientService {
   ): Promise<Array<string>> {
     return await this.getList(`game-${lobbyCode}-player-${playerId}-hand`);
   }
+  // Draw cards
+  async drawCards(
+    lobbyCode: string,
+    cardsToDraw: number,
+    playerId: string
+  ): Promise<Array<SocketEvent>> {
+    const emitQueue: Array<SocketEvent> = [];
+    const multi = this.client.multi();
+    for (let i = 0; i < cardsToDraw; i++){
+      const manager = await this.dbClientService.manager();
+      const cards = await manager.find(Card);
+      const randomCard = cards[Math.floor(Math.random() * cards.length)];
+      multi.rpush(
+        `game-${lobbyCode}-player-${playerId}-hand`,
+        randomCard.id.toString(),
+      );
+      emitQueue.push({
+        event: 'cardDrawn',
+        data: {
+          cardId: randomCard.id.toString(),
+          playerId: playerId
+        },
+      });
+    }
+    await this.execMulti(multi);
+    return emitQueue;
+  }
   // Play a card from a players hand
   async playCard(
     lobbyCode: string,
@@ -490,4 +518,5 @@ export class RedisClientService {
     await this.execMulti(multi);
     return emitQueue;
   }
+
 }

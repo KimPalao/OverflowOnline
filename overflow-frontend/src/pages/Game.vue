@@ -58,6 +58,14 @@
         Play <br />
         Card
       </button>
+      <button
+        class="play-card-button"
+        v-if="allowedToAct == true"
+        @click="drawCards"
+      >
+        Draw <br />
+        Card
+      </button>
     </div>
 
     <div id="game-state">
@@ -124,6 +132,12 @@ export default defineComponent({
     },
     boardUpdated({ newScore }: { newScore: number }) {
       this.board = newScore;
+    },
+    cardDrawn({playerId, cardId }: {playerId: string, cardId: number }) {
+      if (playerId == this.$socket.id){
+        this.hand.push(cardId)
+        console.log(cardId);
+      }
     },
     cardPlayed({
       playerId,
@@ -202,6 +216,14 @@ export default defineComponent({
       );
       if (intersection.length === 0) this.focusedCardIndex = -1;
     },
+    drawCards(cardsToDraw: number) {
+      this.$socket.emit("drawCards", {
+        lobbyCode: this.store.state.lobbyCode,
+        cardsToDraw: 1,
+        playerId: this.$socket.id,
+      });
+      this.allowedToAct = false;
+    },
     playCard() {
       if (this.focusedCardIndex < 0 || !this.allowedToAct) return;
       this.lastSubmittedCardIndex = this.focusedCardIndex;
@@ -211,7 +233,6 @@ export default defineComponent({
         cardIndex: this.focusedCardIndex,
       });
       this.allowedToAct = false;
-      
     },
   },
   mounted() {
