@@ -58,14 +58,6 @@
         Play <br />
         Card
       </button>
-      <button
-        class="play-card-button"
-        v-if="allowedToAct == true"
-        @click="drawCards"
-      >
-        Draw <br />
-        Card
-      </button>
     </div>
 
     <div id="game-state">
@@ -116,8 +108,8 @@ export default defineComponent({
       hand: Array<any>;
     }) {
       this.players = players.filter((p) => p.playerId !== this.$socket.id);
-      for (let i = 0; i < players.length; i++) {
-        this.playerMap[players[i].playerId] = i;
+      for (let i = 0; i < this.players.length; i++) {
+        this.playerMap[this.players[i].playerId] = i;
       }
       this.hand = hand;
     },
@@ -128,14 +120,20 @@ export default defineComponent({
       playerId: string;
       newScore: number;
     }) {
-      this.players[playerId].score = newScore;
+      if (playerId == this.$socket.id) this.score = newScore;
+      else this.players[this.playerMap[playerId]].score = newScore;
     },
     boardUpdated({ newScore }: { newScore: number }) {
       this.board = newScore;
     },
-    cardDrawn({playerId, cardId }: {playerId: string, cardId: number }) {
-      if (playerId == this.$socket.id){
-        this.hand.push(cardId)
+    playerWon({ player }: { player: string }) {
+      alert(`Player ${player} has won!`);
+      this.store.state.lobbyCode = "";
+      this.$router.push({ name: "LobbyMenu" });
+    },
+    cardDrawn({ playerId, cardId }: { playerId: string; cardId: number }) {
+      if (playerId == this.$socket.id) {
+        this.hand.push(cardId);
         console.log(cardId);
       }
     },

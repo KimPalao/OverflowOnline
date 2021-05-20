@@ -370,6 +370,19 @@ export class RedisClientService {
     }
     return await this.execMulti(multi);
   }
+
+  async endGame(lobbyCode: string): Promise<void> {
+    const multi = this.client.multi();
+    const players = await this.getGamePlayers(lobbyCode);
+    multi.del(`game-${lobbyCode}`);
+    for (const player of players) {
+      multi.del(`game-${lobbyCode}-player-${player.playerId}-hand`);
+      multi.del(`host-${player.playerId}`);
+    }
+    multi.del(`game-${lobbyCode}-players`);
+    multi.del(`game-${lobbyCode}-score`);
+    return await this.execMulti(multi);
+  }
   // Retrieve counter state
   async getGameScore(lobbyCode: string): Promise<number> {
     const scoreStr = await this.hget(`game-${lobbyCode}`, 'score');
@@ -389,6 +402,15 @@ export class RedisClientService {
     if (isNaN(score)) return 0;
     return score;
   }
+
+  async setPlayerScore(
+    lobbyCode: string,
+    playerId: string,
+    score: number,
+  ): Promise<void> {
+    await this.hset(`game-${lobbyCode}-score`, playerId, score.toString());
+  }
+
   // Retrieve player data
   async getGamePlayerData(lobbyCode: string) {
     const players = await this.getGamePlayers(lobbyCode);
@@ -420,11 +442,11 @@ export class RedisClientService {
   async drawCards(
     lobbyCode: string,
     cardsToDraw: number,
-    playerId: string
+    playerId: string,
   ): Promise<Array<SocketEvent>> {
     const emitQueue: Array<SocketEvent> = [];
     const multi = this.client.multi();
-    for (let i = 0; i < cardsToDraw; i++){
+    for (let i = 0; i < cardsToDraw; i++) {
       const manager = await this.dbClientService.manager();
       const cards = await manager.find(Card);
       const randomCard = cards[Math.floor(Math.random() * cards.length)];
@@ -436,7 +458,7 @@ export class RedisClientService {
         event: 'cardDrawn',
         data: {
           cardId: randomCard.id.toString(),
-          playerId: playerId
+          playerId: playerId,
         },
       });
     }
@@ -473,27 +495,31 @@ export class RedisClientService {
         score += card.value;
         if (score === 15) {
           // 1111
-          score %= 16;
+          score = 0;
+          const newScore = (await this.getPlayerScore(lobbyCode, playerId)) + 1;
           emitQueue.push({
             event: 'playerScored',
             data: {
               playerId,
-              newScore: (await this.getPlayerScore(lobbyCode, playerId)) + 1,
+              newScore,
             },
           });
+          await this.setPlayerScore(lobbyCode, playerId, newScore);
         } else if (score >= 16) {
           // Overflow
           score %= 16;
           for (const player of players) {
             if (player.playerId === playerId) continue;
+            const newScore =
+              (await this.getPlayerScore(lobbyCode, player.playerId)) + 1;
             emitQueue.push({
               event: 'playerScored',
               data: {
                 playerId: player.playerId,
-                newScore:
-                  (await this.getPlayerScore(lobbyCode, player.playerId)) + 1,
+                newScore,
               },
             });
+            await this.setPlayerScore(lobbyCode, player.playerId, newScore);
           }
         }
         emitQueue.push({
@@ -516,7 +542,20 @@ export class RedisClientService {
     multi.del(`game-${lobbyCode}-player-${playerId}-hand`);
     multi.rpush(`game-${lobbyCode}-player-${playerId}-hand`, hand);
     await this.execMulti(multi);
+    // Check player scores
+    for (const player of players) {
+      if (
+        (await this.getPlayerScore(lobbyCode, player.playerId)) ===
+        parseInt(process.env.WINNING_SCORE)
+      ) {
+        emitQueue.push({
+          event: 'playerWon',
+          data: {
+            player: player.displayName,
+          },
+        });
+      }
+    }
     return emitQueue;
   }
-
 }
