@@ -169,4 +169,15 @@ h1 {
     transform: rotate(360deg);
   }
 }
+
+.input {
+  font-family: "Roboto Mono", "Courier New", Courier, monospace;
+}
+
+.button {
+  border: 2px solid #2c3e50;
+  background: #cddecc;
+  font-family: "Roboto Mono", "Courier New", Courier, monospace;
+  cursor: pointer;
+}
 </style>

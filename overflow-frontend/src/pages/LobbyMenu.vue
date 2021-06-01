@@ -3,8 +3,10 @@
     Join an existing lobby <br />
     or create your own
   </h1>
-  <button @click="JoinLobby()" class="btn">{{ "Join Lobby" }}</button>
-  <button @click="CreateLobby()" class="btn">{{ "Create Lobby" }}</button>
+  <div id="buttons">
+    <button @click="JoinLobby()" class="button">Join Lobby</button>
+    <button @click="CreateLobby()" class="button">Create Lobby</button>
+  </div>
 </template>
 
 <script lang="ts">
@@ -30,5 +32,14 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
+.button {
+  font-size: 32px;
+}
+
+#buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
 </style>

@@ -5,11 +5,11 @@
       <label></label>
       <input
         type="text"
-        class="form-control"
+        class="input"
         v-model="lobbyCode"
         placeholder="Enter code"
       />
-      <button class="btn">{{ "Create" }}</button>
+      <button class="button">Create</button>
     </div>
   </form>
 </template>
@@ -73,5 +73,9 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
+.input,
+.button {
+  font-size: 24px;
+}
 </style>

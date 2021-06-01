@@ -5,11 +5,11 @@
       <label></label>
       <input
         type="text"
-        class="form-control"
+        class="input"
         v-model="username"
-        placeholder="Enter name"
+        placeholder="Display Name"
       />
-      <button class="btn">{{ "Enter Name" }}</button>
+      <button class="button">Enter</button>
     </div>
   </form>
 </template>
@@ -62,3 +62,10 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.input,
+.button {
+  font-size: 24px;
+}
+</style>
