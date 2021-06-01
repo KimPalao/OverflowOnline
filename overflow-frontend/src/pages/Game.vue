@@ -67,7 +67,7 @@
       </div>
       <div class="spacer"></div>
       <button
-        class="play-card-button"
+        class="play-card-button button"
         v-if="focusedCardIndex >= 0"
         @click="playCard"
       >
@@ -355,13 +355,7 @@ p {
   }
 }
 
-.play-card-button {
-  margin: 32px;
+.button {
   font-size: 24px;
-  background: green;
-  border: 1px solid black;
-  border-radius: 5px;
-  cursor: pointer;
-  color: white;
 }
 </style>
