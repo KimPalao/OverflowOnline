@@ -1,6 +1,11 @@
 <template>
   <div v-if="error">{{ error }}</div>
-  <div v-else-if="loading">Loading</div>
+  <div v-else-if="loading">
+    <div id="loader">
+      <div id="spinner"></div>
+      <img src="overflow.png" alt="Overflow Logo" id="overflow_logo" />
+    </div>
+  </div>
   <div class="wrapper" :style="marginStyle" v-else>
     <router-view />
   </div>
@@ -129,5 +134,39 @@ body {
 
 h1 {
   text-shadow: 1px 1px 2px white;
+}
+
+#loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 125px;
+  height: 125px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#overflow_logo {
+  width: 95px;
+  height: 95px;
+}
+
+#spinner {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  border: 5px solid #2c3e50;
+  border-color: #2c3e50 transparent #2c3e50;
+  border-radius: 50%;
+  animation: spin 0.5s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
