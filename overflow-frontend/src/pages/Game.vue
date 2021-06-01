@@ -1,7 +1,11 @@
 <template>
   <div class="grid">
     <div id="top-cards">
-      <card v-for="card in player4.numberOfCards" :obscured="true" />
+      <card
+        v-for="card in player4.numberOfCards"
+        :obscured="true"
+        :backVariant="4"
+      />
       <div>
         <p>{{ player4.displayName }}</p>
         <p v-if="scoreExists(player4.score)">
@@ -15,6 +19,7 @@
         v-for="card in player2.numberOfCards"
         :obscured="true"
         :horizontal="true"
+        :backVariant="2"
       />
       <div>
         <p>{{ player2.displayName }}</p>
@@ -28,6 +33,7 @@
         v-for="card in player3.numberOfCards"
         :obscured="true"
         :horizontal="true"
+        :backVariant="3"
       />
       <div>
         <p>{{ player3.displayName }}</p>
