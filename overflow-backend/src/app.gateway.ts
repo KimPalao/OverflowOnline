@@ -181,6 +181,16 @@ export class AppGateway {
       return;
     }
 
+    // Check if game is already active
+
+    if (await this.redis.isGameActive(lobbyCode)) {
+      client.emit('joinLobbyResponse', {
+        result: false,
+        message: 'Game has already started',
+      });
+      return;
+    }
+
     try {
       await this.redis.joinGame(lobbyCode, client.id);
       // Add player to a room identified by the lobby code
