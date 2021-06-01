@@ -58,8 +58,8 @@ export default defineComponent({
       }
     },
     async loadAssets() {
-    // Loads assets
-    // Alerts with corresponding error if backend is not available
+      // Loads assets
+      // Alerts with corresponding error if backend is not available
       try {
         const response = await this.axios.get(`${this.$socket.io.uri}/cards`);
         const cards = response.data.data;
@@ -105,15 +105,29 @@ export default defineComponent({
 });
 </script>
 <style>
+html,
+body {
+  height: 100%;
+}
+
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  height: 100%;
+  font-family: "Roboto Mono", "Courier New", Courier, monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  background-image: url("bg.png");
+  background-size: contain;
+  display: flex;
+  flex-direction: column;
 }
 
 .spacer {
   flex-grow: 1;
+}
+
+h1 {
+  text-shadow: 1px 1px 2px white;
 }
 </style>

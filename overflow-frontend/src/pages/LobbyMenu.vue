@@ -1,7 +1,10 @@
 <template>
-  <h1>LobbyMenu</h1>
+  <h1>
+    Join an existing lobby <br />
+    or create your own
+  </h1>
   <button @click="JoinLobby()" class="btn">{{ "Join Lobby" }}</button>
-  <button @click="CreateLobby()" class ="btn">{{ "Create Lobby" }}</button>
+  <button @click="CreateLobby()" class="btn">{{ "Create Lobby" }}</button>
 </template>
 
 <script lang="ts">

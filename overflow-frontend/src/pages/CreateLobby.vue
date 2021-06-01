@@ -1,5 +1,5 @@
 <template>
-  <h1>CreateLobby</h1>
+  <h1>Enter a code for your new lobby</h1>
   <form @submit.prevent="handleSubmit">
     <div class="form-group">
       <label></label>
