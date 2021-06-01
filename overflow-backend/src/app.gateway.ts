@@ -315,6 +315,21 @@ export class AppGateway {
       // Give the correct lobby the turn info
       this.server.in(`game-${lobbyCode}`).emit(event.event, event.data);
     }
+    if (emitQueue[emitQueue.length - 1].event === 'playerWon') {
+      this.redis.endGame(lobbyCode);
+    }
+    // Automatically draw cards for current player
+    const numberOfCardsToDraw =
+      5 - (await this.redis.getPlayerHandCount(lobbyCode, playerId));
+    const cardDrawEvents = await this.redis.drawCards(
+      lobbyCode,
+      numberOfCardsToDraw,
+      playerId,
+    );
+    for (const event of cardDrawEvents) {
+      // Give the correct lobby the turn info
+      this.server.in(`game-${lobbyCode}`).emit(event.event, event.data);
+    }
     // Give turn to next player
     for (let i = 0; i < players.length; i++) {
       if (playerId == players[i]['playerId']) {
