@@ -172,6 +172,15 @@ export class AppGateway {
       return;
     }
 
+    // Check if the lobby is full
+    if (await this.redis.isLobbyFull(lobbyCode)) {
+      client.emit('joinLobbyResponse', {
+        result: false,
+        message: 'Lobby full',
+      });
+      return;
+    }
+
     try {
       await this.redis.joinGame(lobbyCode, client.id);
       // Add player to a room identified by the lobby code

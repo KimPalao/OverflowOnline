@@ -225,6 +225,16 @@ export class RedisClientService {
   }
 
   /**
+   * Checks if a game exists by its code
+   *
+   * @param lobbyCode Code of the lobby / game
+   * @returns Boolean indicating if the lobby / game exists
+   */
+  async isLobbyFull(lobbyCode: string): Promise<boolean> {
+    return (await this.getNumberOfPlayers(lobbyCode)) >= 4;
+  }
+
+  /**
    * Creates a new game
    *
    * @param lobbyCode Code of the lobby / game
