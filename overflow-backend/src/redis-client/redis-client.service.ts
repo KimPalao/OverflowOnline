@@ -14,6 +14,15 @@ export class RedisClientService {
   private cardsCached = false;
   constructor(private readonly dbClientService: DbClientService) {}
 
+  async flushAll() {
+    return await new Promise<string>((resolve, reject) => {
+      this.client.flushall((err, value) => {
+        if (err) reject(err);
+        resolve(value);
+      });
+    });
+  }
+
   async cacheCards() {
     if (this.cardsCached) return;
     const manager = await this.dbClientService.manager();
@@ -253,6 +262,16 @@ export class RedisClientService {
     return await this.get(`host-${hostId}`);
   }
 
+  /**
+   * Returns the lobby code that the player is a part of
+   *
+   * @param hostId Socket.IO id of the host
+   * @returns Promise<string>`
+   */
+  async getGameOfPlayer(playerId: string): Promise<string> {
+    return await this.get(`player-${playerId}`);
+  }
+
   async getHostOfGame(lobbyCode: string): Promise<string> {
     return await this.hget(`game-${lobbyCode}`, 'host');
   }
@@ -287,6 +306,10 @@ export class RedisClientService {
     multi.del(`game-${lobbyCode}-players`);
     // Remove the host-lobby mapping
     multi.del(`host-${playerId}`);
+    // Remove the player-lobby mapping
+    multi.del(`player-${playerId}`);
+    // Remove the player from the lobby
+    multi.lrem(`game-${lobbyCode}-players`, 0, playerId);
     return await this.execMulti(multi);
   }
 
@@ -297,7 +320,12 @@ export class RedisClientService {
    * @param playerId Socket.IO id of the player
    */
   async joinGame(lobbyCode: string, playerId: string): Promise<void> {
-    await this.rpush(`game-${lobbyCode}-players`, playerId);
+    const multi = this.client.multi();
+    // Add to list of players
+    multi.rpush(`game-${lobbyCode}-players`, playerId);
+    // Assign the player the lobby code to refer to later
+    multi.set(`player-${playerId}`, lobbyCode);
+    return await this.execMulti(multi);
   }
 
   /**
@@ -420,11 +448,11 @@ export class RedisClientService {
   async drawCards(
     lobbyCode: string,
     cardsToDraw: number,
-    playerId: string
+    playerId: string,
   ): Promise<Array<SocketEvent>> {
     const emitQueue: Array<SocketEvent> = [];
     const multi = this.client.multi();
-    for (let i = 0; i < cardsToDraw; i++){
+    for (let i = 0; i < cardsToDraw; i++) {
       const manager = await this.dbClientService.manager();
       const cards = await manager.find(Card);
       const randomCard = cards[Math.floor(Math.random() * cards.length)];
@@ -436,7 +464,7 @@ export class RedisClientService {
         event: 'cardDrawn',
         data: {
           cardId: randomCard.id.toString(),
-          playerId: playerId
+          playerId: playerId,
         },
       });
     }
@@ -518,5 +546,4 @@ export class RedisClientService {
     await this.execMulti(multi);
     return emitQueue;
   }
-
 }

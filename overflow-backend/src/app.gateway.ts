@@ -17,7 +17,9 @@ export class AppGateway {
 
   private logger: Logger = new Logger('AppGateway');
 
-  constructor(private readonly redis: RedisClientService) {}
+  constructor(private readonly redis: RedisClientService) {
+    this.redis.flushAll();
+  }
 
   /**
    * An event handler that is run whenever a client disconnects
@@ -25,9 +27,14 @@ export class AppGateway {
    * @param client The Socket.IO socket object
    * @returns An empty message
    */
-  handleDisconnect(client: Socket): string {
+  async handleDisconnect(client: Socket): Promise<string> {
     this.logger.log(`Client disconnected: ${client.id}`);
+    const lobbyCode = await this.redis.getGameOfPlayer(client.id);
+    console.log(lobbyCode);
     this.redis.disconnectPlayer(client.id);
+    this.server
+      .in(`game-${lobbyCode}`)
+      .emit('kickEvent', { playerId: client.id });
     return '';
   }
 
@@ -300,10 +307,12 @@ export class AppGateway {
       this.server.in(`game-${lobbyCode}`).emit(event.event, event.data);
     }
     // Give turn to next player
-    for(let i = 0; i < players.length; i++){
-      if (playerId == players[i]['playerId']){
+    for (let i = 0; i < players.length; i++) {
+      if (playerId == players[i]['playerId']) {
         //this.server.to(players[(i+1)%players.length]['playerId']).emit('cardDrawn','1');
-        this.server.to(players[(i+1)%players.length]['playerId']).emit('actionGiven');
+        this.server
+          .to(players[(i + 1) % players.length]['playerId'])
+          .emit('actionGiven');
       }
     }
   }
@@ -323,16 +332,22 @@ export class AppGateway {
   ): Promise<void> {
     // Get list of players
     const players = await this.redis.getGamePlayers(lobbyCode);
-    const emitQueueDraw = await this.redis.drawCards(lobbyCode,cardsToDraw,playerId);
+    const emitQueueDraw = await this.redis.drawCards(
+      lobbyCode,
+      cardsToDraw,
+      playerId,
+    );
     for (const event of emitQueueDraw) {
       // Give the correct lobby the turn info
       this.server.in(`game-${lobbyCode}`).emit(event.event, event.data);
     }
     // Give turn to next player
-    for(let i = 0; i < players.length; i++){
-      if (playerId == players[i]['playerId']){
+    for (let i = 0; i < players.length; i++) {
+      if (playerId == players[i]['playerId']) {
         //this.server.to(players[(i+1)%players.length]['playerId']).emit('cardDrawn','1');
-        this.server.to(players[(i+1)%players.length]['playerId']).emit('actionGiven');
+        this.server
+          .to(players[(i + 1) % players.length]['playerId'])
+          .emit('actionGiven');
       }
     }
   }
