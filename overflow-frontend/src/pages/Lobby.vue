@@ -90,7 +90,7 @@ export default defineComponent({
      */
     startGameResponse({ result, message }: { result: boolean; message: any }) {
       if (!result) {
-        alert(message);
+        this.$emit("dialog", message);
       }
     },
     /**
@@ -123,7 +123,7 @@ export default defineComponent({
      */
     onClick() {
       if (this.players.length < 2) {
-        return alert("Cannot start game with only one player");
+        return this.$emit("dialog", "Cannot start game with only one player");
       }
       this.$socket.emit("startGame", this.store.state.lobbyCode);
     },

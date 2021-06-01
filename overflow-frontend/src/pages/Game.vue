@@ -1,4 +1,14 @@
 <template>
+  <dialog id="favDialog" ref="dialog">
+    <form method="dialog">
+      {{ dialogMessage }}
+      <menu>
+        <button class="button modal-confirmation" value="default">
+          Return to Lobby
+        </button>
+      </menu>
+    </form>
+  </dialog>
   <div class="grid">
     <div id="top-cards">
       <card
@@ -103,6 +113,8 @@ export default defineComponent({
       lastSubmittedCardIndex: -1,
       lastPlayedCard: "",
       allowedToAct: false,
+
+      dialogMessage: "",
     };
   },
   sockets: {
@@ -133,9 +145,9 @@ export default defineComponent({
       this.board = newScore;
     },
     playerWon({ player }: { player: string }) {
-      alert(`Player ${player} has won!`);
-      this.store.state.lobbyCode = "";
-      this.$router.push({ name: "LobbyMenu" });
+      this.dialogMessage = `Player ${player} has won!`;
+      this.$refs.dialog.showModal();
+      this.$refs.dialog.addEventListener("close", this.returnToLobby);
     },
     cardDrawn({ playerId, cardId }: { playerId: string; cardId: number }) {
       if (playerId == this.$socket.id) {
@@ -185,6 +197,10 @@ export default defineComponent({
     },
   },
   methods: {
+    returnToLobby() {
+      this.store.state.lobbyCode = "";
+      this.$router.push({ name: "LobbyMenu" });
+    },
     boardNthNumber(n: number) {
       return (this.board >> n) & 1;
     },

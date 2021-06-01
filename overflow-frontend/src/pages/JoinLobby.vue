@@ -51,7 +51,7 @@ export default defineComponent({
         this.store.state.lobbyCode = message;
         this.$router.push({ name: "Lobby" });
       } else {
-        alert(message);
+        this.$emit("dialog", message);
       }
     },
   },
@@ -59,7 +59,7 @@ export default defineComponent({
     // Players get an error alert if the lobby code entered is blank
     handleSubmit() {
       if (this.lobbyCode.trim().length == 0) {
-        alert("Code cannot be blank");
+        this.$emit("dialog", "Code cannot be blank");
         return;
       }
       this.$socket.emit("joinLobby", this.lobbyCode);

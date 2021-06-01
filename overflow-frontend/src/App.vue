@@ -1,4 +1,14 @@
 <template>
+  <dialog id="favDialog" ref="dialog">
+    <form method="dialog">
+      {{ dialogMessage }}
+      <menu>
+        <button class="button modal-confirmation" value="default">
+          Confirm
+        </button>
+      </menu>
+    </form>
+  </dialog>
   <div v-if="error">{{ error }}</div>
   <div v-else-if="loading">
     <div id="loader">
@@ -7,7 +17,7 @@
     </div>
   </div>
   <div class="wrapper" :style="marginStyle" v-else>
-    <router-view />
+    <router-view @dialog="openDialog" />
   </div>
 </template>
 
@@ -25,6 +35,7 @@ export default defineComponent({
       checkingBackend: true,
       loadingAssets: true,
       error: "",
+      dialogMessage: "",
     };
   },
   sockets: {
@@ -59,7 +70,7 @@ export default defineComponent({
         let errorMessage = "Backend cannot be reached. The game cannot start.";
         if (error?.response?.data?.message)
           errorMessage += this.error = ` Error: ${error.response.data.message}`;
-        alert(errorMessage);
+        this.$emit("dialog", errorMessage);
       }
     },
     async loadAssets() {
@@ -88,8 +99,12 @@ export default defineComponent({
         let errorMessage = "Backend cannot be reached. The game cannot start.";
         if (error?.response?.data?.message)
           errorMessage += this.error = ` Error: ${error.response.data.message}`;
-        alert(errorMessage);
+        this.openDialog(errorMessage);
       }
+    },
+    openDialog(message: string) {
+      this.dialogMessage = message;
+      this.$refs.dialog.showModal();
     },
   },
   mounted() {
@@ -180,5 +195,24 @@ h1 {
   background: #cddecc;
   font-family: "Roboto Mono", "Courier New", Courier, monospace;
   cursor: pointer;
+}
+
+dialog {
+  border-color: $text-color;
+  background-color: $background;
+  color: black;
+  text-shadow: white 1px 1px 1px;
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.75);
+  }
+}
+
+menu {
+  padding: 0;
+}
+
+.modal-confirmation {
+  width: 100%;
 }
 </style>

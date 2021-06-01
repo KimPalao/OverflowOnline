@@ -53,7 +53,7 @@ export default defineComponent({
         this.store.state.lobbyCode = message;
         this.$router.push({ name: "Lobby" });
       } else {
-        alert(message);
+        this.$emit("dialog", message);
       }
     },
   },
@@ -61,7 +61,7 @@ export default defineComponent({
     // Handles creation of lobby
     handleSubmit() {
       if (this.lobbyCode.trim().length == 0) {
-        alert("Code cannot be blank");
+        this.$emit("dialog", "Code cannot be blank");
         return;
       }
       this.$socket.emit("createLobby", this.lobbyCode);
