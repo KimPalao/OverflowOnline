@@ -135,6 +135,8 @@ export default defineComponent({
       if (playerId == this.$socket.id) {
         this.hand.push(cardId);
         console.log(cardId);
+      } else {
+        this.players[this.playerMap[playerId]].numberOfCards += 1;
       }
     },
     cardPlayed({
