@@ -109,7 +109,8 @@ export default defineComponent({
   },
 });
 </script>
-<style>
+<style lang="scss">
+@import "./scss/_variables.scss";
 html,
 body {
   height: 100%;
@@ -121,7 +122,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  color: $text-color;
   background-image: url("bg.png");
   background-size: contain;
   display: flex;
@@ -158,8 +159,8 @@ h1 {
   width: 100%;
   height: 100%;
   position: absolute;
-  border: 5px solid #2c3e50;
-  border-color: #2c3e50 transparent #2c3e50;
+  border: 5px solid $text-color;
+  border-color: $text-color transparent $text-color;
   border-radius: 50%;
   animation: spin 0.5s linear infinite;
 }
@@ -175,7 +176,7 @@ h1 {
 }
 
 .button {
-  border: 2px solid #2c3e50;
+  border: 2px solid $text-color;
   background: #cddecc;
   font-family: "Roboto Mono", "Courier New", Courier, monospace;
   cursor: pointer;

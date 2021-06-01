@@ -61,10 +61,10 @@
     </div>
 
     <div id="game-state">
-      <card :text="boardNthNumber(3)" :outlined="true" />
-      <card :text="boardNthNumber(2)" :outlined="true" />
-      <card :text="boardNthNumber(1)" :outlined="true" />
-      <card :text="boardNthNumber(0)" :outlined="true" />
+      <card :text="boardNthNumber(3)" :outlined="true" image="score.png" />
+      <card :text="boardNthNumber(2)" :outlined="true" image="score.png" />
+      <card :text="boardNthNumber(1)" :outlined="true" image="score.png" />
+      <card :text="boardNthNumber(0)" :outlined="true" image="score.png" />
     </div>
 
     <div id="last-card">
@@ -242,6 +242,7 @@ export default defineComponent({
 });
 </script>
 <style lang="scss" scoped>
+@import "../scss/_variables.scss";
 $factor: 0.4;
 $width: 59mm;
 $height: 86mm;
@@ -313,15 +314,15 @@ body {
   justify-content: end;
   gap: 20px;
   h1 {
-    color: white;
-    text-shadow: #000 02px 1px 1px;
+    color: $text-color;
+    text-shadow: white 2px 1px 1px;
   }
 }
 
 p {
-  color: white;
   font-size: 20px;
-  text-shadow: #000 02px 1px 1px;
+  color: $text-color;
+  text-shadow: white 2px 1px 1px;
 }
 
 .card {
