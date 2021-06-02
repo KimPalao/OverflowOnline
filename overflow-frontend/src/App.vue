@@ -215,4 +215,28 @@ menu {
 .modal-confirmation {
   width: 100%;
 }
+
+$dialog-animation-time: 0.15s;
+$dialog-animation-timing: cubic-bezier(0, -0.53, 1, 1.56);
+
+dialog[open] {
+  -webkit-animation: show $dialog-animation-time $dialog-animation-timing normal;
+  animation: show $dialog-animation-time $dialog-animation-timing normal;
+}
+@-webkit-keyframes show {
+  from {
+    transform: translateY(-110%);
+  }
+  to {
+    transform: translateY(0%);
+  }
+}
+@keyframes show {
+  from {
+    transform: translateY(-110%);
+  }
+  to {
+    transform: translateY(0%);
+  }
+}
 </style>
