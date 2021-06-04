@@ -421,6 +421,12 @@ export class RedisClientService {
     multi.del(`game-${lobbyCode}-score`);
     return await this.execMulti(multi);
   }
+
+  async isGameActive(lobbyCode: string): Promise<boolean> {
+    const active = await this.hget(`game-${lobbyCode}`, 'active');
+    return active === "1";
+  }
+
   // Retrieve counter state
   async getGameScore(lobbyCode: string): Promise<number> {
     const scoreStr = await this.hget(`game-${lobbyCode}`, 'score');

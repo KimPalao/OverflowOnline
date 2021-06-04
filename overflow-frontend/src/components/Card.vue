@@ -33,9 +33,17 @@ export default defineComponent({
     obscured: {
       type: Boolean,
     },
+    backVariant: {
+      type: Number,
+    },
   },
   computed: {
     style() {
+      if (this.obscured)
+        return {
+          backgroundImage: `url("back${this.backVariant}.png")`,
+          backgroundSize: "cover",
+        };
       return {
         backgroundImage: `url(${this.image})`,
         backgroundSize: "cover",

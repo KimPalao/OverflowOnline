@@ -1,15 +1,15 @@
 <template>
-  <h1>JoinLobby</h1>
+  <h1>Enter an existing lobby code</h1>
   <form @submit.prevent="handleSubmit">
     <div class="form-group">
       <label></label>
       <input
         type="text"
-        class="form-control"
+        class="input"
         v-model="lobbyCode"
         placeholder="Enter code"
       />
-      <button class="btn">{{ "Join" }}</button>
+      <button class="button">Join</button>
     </div>
   </form>
 </template>
@@ -51,7 +51,7 @@ export default defineComponent({
         this.store.state.lobbyCode = message;
         this.$router.push({ name: "Lobby" });
       } else {
-        alert(message);
+        this.$emit("dialog", message);
       }
     },
   },
@@ -59,7 +59,7 @@ export default defineComponent({
     // Players get an error alert if the lobby code entered is blank
     handleSubmit() {
       if (this.lobbyCode.trim().length == 0) {
-        alert("Code cannot be blank");
+        this.$emit("dialog", "Code cannot be blank");
         return;
       }
       this.$socket.emit("joinLobby", this.lobbyCode);
@@ -71,5 +71,9 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
+.input,
+.button {
+  font-size: 24px;
+}
 </style>

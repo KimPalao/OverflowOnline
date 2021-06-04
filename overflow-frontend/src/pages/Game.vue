@@ -1,7 +1,21 @@
 <template>
+  <dialog id="favDialog" ref="dialog">
+    <form method="dialog">
+      {{ dialogMessage }}
+      <menu>
+        <button class="button modal-confirmation" value="default">
+          Return to Lobby
+        </button>
+      </menu>
+    </form>
+  </dialog>
   <div class="grid">
     <div id="top-cards">
-      <card v-for="card in player4.numberOfCards" :obscured="true" />
+      <card
+        v-for="card in player4.numberOfCards"
+        :obscured="true"
+        :backVariant="4"
+      />
       <div>
         <p>{{ player4.displayName }}</p>
         <p v-if="scoreExists(player4.score)">
@@ -15,6 +29,7 @@
         v-for="card in player2.numberOfCards"
         :obscured="true"
         :horizontal="true"
+        :backVariant="2"
       />
       <div>
         <p>{{ player2.displayName }}</p>
@@ -28,6 +43,7 @@
         v-for="card in player3.numberOfCards"
         :obscured="true"
         :horizontal="true"
+        :backVariant="3"
       />
       <div>
         <p>{{ player3.displayName }}</p>
@@ -51,7 +67,7 @@
       </div>
       <div class="spacer"></div>
       <button
-        class="play-card-button"
+        class="play-card-button button"
         v-if="focusedCardIndex >= 0"
         @click="playCard"
       >
@@ -61,10 +77,10 @@
     </div>
 
     <div id="game-state">
-      <card :text="boardNthNumber(3)" :outlined="true" />
-      <card :text="boardNthNumber(2)" :outlined="true" />
-      <card :text="boardNthNumber(1)" :outlined="true" />
-      <card :text="boardNthNumber(0)" :outlined="true" />
+      <card :text="boardNthNumber(3)" :outlined="true" image="score.png" />
+      <card :text="boardNthNumber(2)" :outlined="true" image="score.png" />
+      <card :text="boardNthNumber(1)" :outlined="true" image="score.png" />
+      <card :text="boardNthNumber(0)" :outlined="true" image="score.png" />
     </div>
 
     <div id="last-card">
@@ -97,6 +113,8 @@ export default defineComponent({
       lastSubmittedCardIndex: -1,
       lastPlayedCard: "",
       allowedToAct: false,
+
+      dialogMessage: "",
     };
   },
   sockets: {
@@ -127,9 +145,9 @@ export default defineComponent({
       this.board = newScore;
     },
     playerWon({ player }: { player: string }) {
-      alert(`Player ${player} has won!`);
-      this.store.state.lobbyCode = "";
-      this.$router.push({ name: "LobbyMenu" });
+      this.dialogMessage = `Player ${player} has won!`;
+      this.$refs.dialog.showModal();
+      this.$refs.dialog.addEventListener("close", this.returnToLobby);
     },
     cardDrawn({ playerId, cardId }: { playerId: string; cardId: number }) {
       if (playerId == this.$socket.id) {
@@ -179,6 +197,10 @@ export default defineComponent({
     },
   },
   methods: {
+    returnToLobby() {
+      this.store.state.lobbyCode = "";
+      this.$router.push({ name: "LobbyMenu" });
+    },
     boardNthNumber(n: number) {
       return (this.board >> n) & 1;
     },
@@ -242,6 +264,7 @@ export default defineComponent({
 });
 </script>
 <style lang="scss" scoped>
+@import "../scss/_variables.scss";
 $factor: 0.4;
 $width: 59mm;
 $height: 86mm;
@@ -313,15 +336,15 @@ body {
   justify-content: end;
   gap: 20px;
   h1 {
-    color: white;
-    text-shadow: #000 02px 1px 1px;
+    color: $text-color;
+    text-shadow: white 2px 1px 1px;
   }
 }
 
 p {
-  color: white;
   font-size: 20px;
-  text-shadow: #000 02px 1px 1px;
+  color: $text-color;
+  text-shadow: white 2px 1px 1px;
 }
 
 .card {
@@ -332,13 +355,7 @@ p {
   }
 }
 
-.play-card-button {
-  margin: 32px;
+.button {
   font-size: 24px;
-  background: green;
-  border: 1px solid black;
-  border-radius: 5px;
-  cursor: pointer;
-  color: white;
 }
 </style>

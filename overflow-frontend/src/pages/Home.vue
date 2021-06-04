@@ -5,11 +5,11 @@
       <label></label>
       <input
         type="text"
-        class="form-control"
+        class="input"
         v-model="username"
-        placeholder="Enter name"
+        placeholder="Display Name"
       />
-      <button class="btn">{{ "Enter Name" }}</button>
+      <button class="button">Enter</button>
     </div>
   </form>
 </template>
@@ -44,7 +44,7 @@ export default defineComponent({
         this.store.state.displayName = message;
         this.$router.push({ name: "LobbyMenu" });
       } else {
-        alert(message);
+        this.$emit("dialog", message);
       }
     },
   },
@@ -54,7 +54,7 @@ export default defineComponent({
      */
     handleSubmit() {
       if (this.username.trim().length == 0) {
-        alert("Username cannot be blank");
+        this.$emit("dialog", "Username cannot be blank");
         return;
       }
       this.$socket.emit("setName", this.username);
@@ -62,3 +62,10 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.input,
+.button {
+  font-size: 24px;
+}
+</style>

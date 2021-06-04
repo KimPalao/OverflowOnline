@@ -1,8 +1,23 @@
 <template>
+  <dialog id="favDialog" ref="dialog">
+    <form method="dialog">
+      {{ dialogMessage }}
+      <menu>
+        <button class="button modal-confirmation" value="default">
+          Confirm
+        </button>
+      </menu>
+    </form>
+  </dialog>
   <div v-if="error">{{ error }}</div>
-  <div v-else-if="loading">Loading</div>
+  <div v-else-if="loading">
+    <div id="loader">
+      <div id="spinner"></div>
+      <img src="overflow.png" alt="Overflow Logo" id="overflow_logo" />
+    </div>
+  </div>
   <div class="wrapper" :style="marginStyle" v-else>
-    <router-view />
+    <router-view @dialog="openDialog" />
   </div>
 </template>
 
@@ -20,6 +35,7 @@ export default defineComponent({
       checkingBackend: true,
       loadingAssets: true,
       error: "",
+      dialogMessage: "",
     };
   },
   sockets: {
@@ -54,12 +70,12 @@ export default defineComponent({
         let errorMessage = "Backend cannot be reached. The game cannot start.";
         if (error?.response?.data?.message)
           errorMessage += this.error = ` Error: ${error.response.data.message}`;
-        alert(errorMessage);
+        this.$emit("dialog", errorMessage);
       }
     },
     async loadAssets() {
-    // Loads assets
-    // Alerts with corresponding error if backend is not available
+      // Loads assets
+      // Alerts with corresponding error if backend is not available
       try {
         const response = await this.axios.get(`${this.$socket.io.uri}/cards`);
         const cards = response.data.data;
@@ -83,8 +99,12 @@ export default defineComponent({
         let errorMessage = "Backend cannot be reached. The game cannot start.";
         if (error?.response?.data?.message)
           errorMessage += this.error = ` Error: ${error.response.data.message}`;
-        alert(errorMessage);
+        this.openDialog(errorMessage);
       }
+    },
+    openDialog(message: string) {
+      this.dialogMessage = message;
+      this.$refs.dialog.showModal();
     },
   },
   mounted() {
@@ -104,16 +124,119 @@ export default defineComponent({
   },
 });
 </script>
-<style>
+<style lang="scss">
+@import "./scss/_variables.scss";
+html,
+body {
+  height: 100%;
+}
+
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  height: 100%;
+  font-family: "Roboto Mono", "Courier New", Courier, monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  color: $text-color;
+  background-image: url("bg.png");
+  background-size: contain;
+  display: flex;
+  flex-direction: column;
 }
 
 .spacer {
   flex-grow: 1;
+}
+
+h1 {
+  text-shadow: 1px 1px 2px white;
+}
+
+#loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 125px;
+  height: 125px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#overflow_logo {
+  width: 95px;
+  height: 95px;
+}
+
+#spinner {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  border: 5px solid $text-color;
+  border-color: $text-color transparent $text-color;
+  border-radius: 50%;
+  animation: spin 0.5s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.input {
+  font-family: "Roboto Mono", "Courier New", Courier, monospace;
+}
+
+.button {
+  border: 2px solid $text-color;
+  background: #cddecc;
+  font-family: "Roboto Mono", "Courier New", Courier, monospace;
+  cursor: pointer;
+}
+
+dialog {
+  border-color: $text-color;
+  background-color: $background;
+  color: black;
+  text-shadow: white 1px 1px 1px;
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.75);
+  }
+}
+
+menu {
+  padding: 0;
+}
+
+.modal-confirmation {
+  width: 100%;
+}
+
+$dialog-animation-time: 0.15s;
+$dialog-animation-timing: cubic-bezier(0, -0.53, 1, 1.56);
+
+dialog[open] {
+  -webkit-animation: show $dialog-animation-time $dialog-animation-timing normal;
+  animation: show $dialog-animation-time $dialog-animation-timing normal;
+}
+@-webkit-keyframes show {
+  from {
+    transform: translateY(-110%);
+  }
+  to {
+    transform: translateY(0%);
+  }
+}
+@keyframes show {
+  from {
+    transform: translateY(-110%);
+  }
+  to {
+    transform: translateY(0%);
+  }
 }
 </style>

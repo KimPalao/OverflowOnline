@@ -23,7 +23,7 @@
   <br />
 
   <!-- UC1-S9: Host starts game successfully -->
-  <button @click="onClick()" v-if="isHost">{{ "Start Game" }}</button>
+  <button @click="onClick()" v-if="isHost" class="button">Start Game</button>
   <!-- /UC1-S9 -->
 </template>
 
@@ -90,7 +90,7 @@ export default defineComponent({
      */
     startGameResponse({ result, message }: { result: boolean; message: any }) {
       if (!result) {
-        alert(message);
+        this.$emit("dialog", message);
       }
     },
     /**
@@ -123,7 +123,7 @@ export default defineComponent({
      */
     onClick() {
       if (this.players.length < 2) {
-        return alert("Cannot start game with only one player");
+        return this.$emit("dialog", "Cannot start game with only one player");
       }
       this.$socket.emit("startGame", this.store.state.lobbyCode);
     },
@@ -145,12 +145,13 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style scoped>
 .lobby-box {
-  border: 1px solid black;
+  border: 1px solid #85d171;
   border-radius: 10px;
   width: 50%;
   margin: auto;
+  background: #96e282;
 }
 h3 {
   text-align: left;
@@ -169,5 +170,9 @@ h3 {
   margin-block-start: 1em;
   margin-block-end: 1em;
   margin-right: 1em;
+}
+
+.button {
+  font-size: 24px;
 }
 </style>
